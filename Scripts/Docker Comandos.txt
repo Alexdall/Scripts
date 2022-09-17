@@ -1,0 +1,176 @@
+docker commands
+
+--salvar uma imagem em .tar para leva-la para outro servidor
+docker save -o c:/myfile.tar centos:16
+
+-- quando restaurar um container travado, este pode estar associado a uma imagem antiga, entao primeiramente pode-se 
+salvar a imaem atual como outra imagem e recriar o container novamente a partir dessa atual
+
+docker ps - pega os containers ativos
+--cria nova imagem tageada (nomeada)
+docker commit <nome imagem atual> <nome nova imagem> ex. docker commit nifi-infrasp-suat nifi-infrasp-suat2
+docker images - para ver a nova imagem
+--cria outro container baseado na imagem copiada
+docker run --name nifi-infrasp-suat2 (container) --rm -d -p 9099:9099 nifi-infrasp-suat2 (imagem)
+
+--subir uma imagem a partir de um .tar
+docker load --input <arquivo.tar>
+docker image ls
+
+docker version
+
+--limpar containers,redes e imagens nao usadas
+docker system prune -a
+https://docs.docker.com/engine/reference/commandline/system_prune/
+
+--limpar os volumes
+
+/var/lib/docker/volumes
+docker volume prune
+
+iniciar docker  - systemctl start docker
+docker pull 
+docker images ou docker image list
+sudo docker images -q   mostra somente os numeros das imagens
+docker top <ID do container ou nome> para ver o principal processo de um container
+docker stats - memoria, cpu etc	
+docker version
+docker ps - containers senso executados
+docker ps -a - mostra todos os containers ja utilizados, mesmo os parados
+docker run <container>
+docker run <container> <comando SO> ex.: docker run ubuntu echo "Hello World"    docker run ubuntu cat /etc/*release*
+docker run ubuntu:16.04  faz o pull e executa o pacote na versão 16.04
+docker run -d  - roda o comando em background
+docker stop <id ou nome do container>
+docker exec <container> <comando> - executa um comando em um container que já está rodando ex. docker exec 3hg56 ls
+as ferramentas do host podem ser diferentes das do container
+bash --version - pega a versão do bash do host
+docker run ubuntu bash --version   - pega a versão do bash do container
+docker rm <id container> - remove o container
+docker container prune - remove todos os containers parados, como se fosse um rm -rf/  - remove somente o container (camada de R/W) que foi criado em cima da imagem, mas esta não é apagada
+docker rmi <id da imagem>  - remove uma imagem
+
+Para persistir os dados, mesmo quando um container é apagado, temos que criar um volume de dados dentro do container que vai persistir no host
+docker run -v "/var/www" ubuntu 
+exemplo: docker run -v "/var/" ubuntu echo "qualquer coisa" > /var/teste.txt
+docker inspect <id container>  - mostra informações sobre o container inclusive em Mounts -> Type Volume -> Source aparece o caminho do diretorio onde o arquivo foi gerado no docker run -v
+tudo que estiver dentro desse diretorio estava no diretorio do container, cuidar para nao usar uma pasta raiz como /var mas sim outra pasta dentro pq senao ele vai pegar arquivos e diretorios desnecessarios, primeiro criar uma pasta com mkdir e depois rodar o comando. Ex mkdir /var /www e depois docker run -v "/var/www" ubuntu echo "qualquer coisa" > /var/www/teste.txt
+
+Para evitar do caminho ficar enorme e ser definido pelo docker é possível passar mapear a pasta a ser configurada. Ex. docker run -it -v "/home/pwd/Desktop:/var/www" ubuntu  - o antes dos : é o host e o depois é o container   host:container. Isso tb serve para mapeamento de portas.
+
+Para criar uma imagem no docker deve-se criar um arquivo chamado Dockerfile ou nome.dockerfile com os comandos necessários.
+Ex.vi Dockerfile 
+FROM alpine:3.9 - cria o SO Alpine
+d --no-cache mongobd  - baixa o mongodb mas nao deixa a imagem armazenada em cache
+VOLUME /data/db  - cria a pasta do volume no host
+EXPOSE 27017  -  abre a porta a ser acessada externamente
+CMD ["mongod", "--bind_ip", "0.0.0.0"] - pode ser acessada por qq ip
+
+para criar: docker build -t <identificador no docker hub>/mongo:1.0 .  - o ponto no final pega o dockerfile do diretorio corrente  ou docker build -f <local e nome docker file> <identificador no docker hub>/mongo:1.0
+
+Para subir a imagem para o Docker Hub: docker push <identificador no docker hub>/mongo:1.0
+
+Baixar uma imagem do Docker Hub e rodar
+
+docker run -d -p <porta host>:<porta container> -v <volume host>:<volume container> --name <nome do container> --network <nome da rede diferente do docker, se tiver sido criada> <identificador no docker hub>/<imagem>
+
+Ex: docker run -d -p 27018:27017 -v $HOME/db:/data/db --name mongo --network minha-rede alexandredall/mongo:1.0
+
+para loga no docker via command line: docker login  depois coloca usuario e senha
+
+Mapeamento de portas: ex. docker run -d -p 27017:27017 -v $home/db:/data/db <nome da imagem> - mapeia a porta do mongo no container para a porta externa no host e o volume do container para o diretorio externo do host.
+
+Pode entao rodar a interface grafica do mongo db em outro container passando o endereço ip do container do banco e comecar a cadastrar documentos ou fazer consultas.
+
+ex.: docker run -p 8081:8081 -e ME_CONFIG_MONGODB_SERVER="172.17.0.2" mongo-express     -   o -e é para setar uma variavel de ambiente, no caso, o local do mongodb server, ou seja, o banco que esta no outro container.  
+
+para pegar o IP do container do banco entra-se nele e digitar: docker inspect <id container> | grep IPAddress ou hostname -i (precisa ter entrado no container)
+
+Lembrando que esse é o endereço IP interno do container, logo o docker run ira funcionar se ambos os containers estiverem dentro do mesmo host. Se for criada outra vm (host) rodando o container do mongo-express, o IP a ser digitado na variavel de ambiente é o do outro host (IP externo).
+
+Exemplo de uso de chamadas de comandos do SO
+
+criar arquivo dockerfile 
+FROM alpine  - baixa alpine
+ENTRYPOINT ["/bin/ping"] - comando a ser executados
+CMD ["localhost"]  - parametro passado para o comando ping
+
+construir a imagem
+docker build  -t alpine-ping
+
+
+--logs do container do nifi
+docker logs --tail 1000 -f	 nifi-viaquatro
+
+docker logs nifi-viaquatro --tail 100 -f | grep -e lucene
+docker logs nifi-viaquatro --tail 100 -f | grep -v lucene
+
+
+ao rodar pode-se somente chamar o container ou sobrescrever o parametro enviado
+
+docker run -rm alpine-ping    ou     docker run -rm alpine-ping 8.8.8.8 (sobrescreve o localhost com outro IP)
+
+docker network ls ou docker network list - busca as redes disponiveis
+
+hostname - pega o nome do servidor
+hostname -i pega o ip do servidor (host)
+
+se der um docker run -it <container>  - -it modo interativo, ou seja, ja sai usando o prompt do container
+entrando no container e danso um hostname -i, pega-se o ip do container
+
+no que diz respeito à rede, o docker cria a sua propria network quando é startado (ou criado?). Isso é ruim pq a cada subida de container, este pode receber um novo ip
+Para resolver isso temos que criar nossa propria rede com o comando docker network create --driver bridge <nome da rede>
+
+quando der um docker run, atribui-se a rede e dá-se um nome para esse container, nao necessitando mais acessá-lo pelo ip ou pelo nome aleatório criado pelo docker.
+
+docker run -it --name <nome> --network <nome da rede> <nome container>
+
+Etapas para Baixar e Executar projeto GIT
+
+docker run --name repo alpine/git clone https://github.com/docker/getting_started.git
+
+Copiar projeto
+
+docker cp repo:/git/getting_started/ .
+
+Para ver o conteudo
+
+cd getting_started
+
+fazer o build do projeto (criar imagem)
+
+docker build -t docker101tutorial .
+
+Rodar o projeto
+
+docker run -d -p 80:80 --name docker-tutorial docker101tutorial
+
+Enviar para o docker hub
+
+docker tag docker101tutorial alexdall/docker101tutorial
+docker push alexdall/docker101tutorial
+
+--shell docker
+docker exec -it <container> bash
+
+colocar para copiar o flow xml de hora em hora
+sudo watch  -n 3600 docker cp nifi-infrasp-kcor-20210818:/opt/nifi/nifi-current/conf/flow.xml.gz .
+
+contato@gympass.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

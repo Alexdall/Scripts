@@ -1,0 +1,1331 @@
+
+
+1. Configuração client hadoop
+configurar para acessar o storage
+2. Configurar ACLs recursivo
+3. Configurara ACL Default para novos dados que serão criados
+
+
+Melhores praticas desenvovimento sparkver
+
+Criar lista a partir de coluna do dataframe:
+
+df_list = df_main.select('partition_dt').distinct().collect()
+
+Imprimir lista pyspark:
+
+for dt in range(len(df_list)):
+  print(df_list[dt].partition_dt)
+  
+
+
+Cuidar: gargalos em cpu, memoria e rede
+
+Serializacao de dados: ajuda a reduzir consumo de memória e melhora a performace de rede
+- primeira coisa a se olhar quanod necessita de tunning no spark. Formatos de seralizacao lenta, degridem a computação.
+- Spark fornece 2 tipos de serialização:
+	- Java: lento, usado para grandes volumes de dados
+	- Kryo: mais rápido (em torno de 10x mais rápido),se usados objetos grandes, aumentar o spark.kryoserializer.buffer para ser grande o bastante para armazenar o maior objeto a ser serializado.
+
+Memoria: Objetos java consomem muito espaço. cada objeto java possui um header que tem em torno de 16 bytes e contem informações de pointeiros para as classes. Esses objetos pode acabar ficando maiores que os dados que eles contém. Java string possuem 40 bytes de overhead sobre os dados raw do tipo string e armazena cada caracter como 2 bytes armazenado string usando utf-16. Logo, uma string de 10 caraccteres pode facilmente consumir 60 bytes.
+
+sempre que um objeto (tabela ou rdd/dataframe que acessa o data lake ou banco) for utilizado, chamado, mais de uma vez no código, este deve ser colcoado em cache para evitar que tenhamos I/O desnecessário e isso onera muita cpu e memória.
+
+Mas ao fazer isso deve-se cuidar o tamanho do dataset pois ele pode nao caber na memória e haverá erro de out of memory. 
+
+Cache armazena os dados somente na memória, para evitar isso, de forma a utilizar grandes datasets é possível usar o método PERSIST.
+
+from pyspark import StorageLevel
+Persist() : df.persist(StorageLevel.MEMORY_AND_DISK). Esse metodo é mais inteligente do que usar cache pois ele, dependendo do tamenho do dataset, armazena tanto na memória quanto no disco, melhorando bastante a performance de acesso.
+
+
+	
+usar cache para tabelas de ate 128Mb. Maiores que isso deixar o spark tratar.
+
+Uso de memoria pode ser dividido em dois tipos:
+- memória de execução: refere-se aos dados que são usados em shuffles, join, sorts e agregações. 
+- memória de storage: refere-se a dados usados em cache e que são propagados dentro do cluster. 
+Ambos compartilham a mesma região de memória, quando nennhuma memória de execução é usada, o storage pode usar toda a memória disponível e vice-versa. Aplicações que nao usam cache podem usar todo o espaço para execução, evitando uso de disco desnecessários. aplicações que usam cache reservam um espaço de armazenamento evitando que seus dados sejam despejados. Essa abordagem em geral fornece um desemplenho razoavel, mesmo sem os usuarios conhecerem da memoria interna.
+spark.memory.fraction: tamanho da fração da JVM heap space. default 0,6%. Os demais 40% é reservaod para estruturas de dados, metadados internos, etc.
+spark.memory.storageFraction: tamanho do storage, em geral 50%. espaço de armazenamento na memória onde os objetos em cache são imunes ao despejo pela execução.
+
+Cmo descobrir a memoria usada pelos objetos e como melhorar o desempenho mudando estruturas de dados ou armazenando dados serializados. Importante tb ver tmanho de cache e java garbage collector.
+
+A melhor forma de saber a quantidade de mporia consumida por um objeto é criar um RDD, colocar em cache e olhar a página Storage no Web UI. Essa pagina mostra quanto o RDD está ocupando de memória.
+
+quando os objetos sao muito grandes para serem armazenados eficientemente, uma maneira de reduzir memória é armazenar de formaserializada, usando StorageLEvels no RDD persistence API, como MEMORY_ONLEY_SER. Spark entao armazena o objeto como byte array. O único problema é a demora em serliazar novamenete no acesso. É recomendado usar Kryo para fazer cache de forma serializada.
+
+- colocar o dataframe em cache (dataFrame.cache()) quando em uso minimiza o uso de memória e a pressão no Garbage Collector.
+
+Algumas propriedades importantes:
+
+spark.sql.inMemoryColumnarStorage.compressed 	true 	
+spark.sql.inMemoryColumnarStorage.batchSize 	10000
+
+Colocar aqui os problemas com Garbage Collector:
+
+
+
+
+
+Nivel de Paralelismo: 
+
+Particionamento
+
+procurar sempre particionar os datasets para utilizar as narrow dependency, ou seja, fazer com que os processos pais e filhos sejam claros e estejam em uma forama de 1:1. Quando o dataset não é particionado ou quando usa-se groupbykey, sort e outras funcoes do tipo, nao se tem ideia de como o dataset é particionado, causando wide dependency, ou seja, pais pode ter muitos processos filhos e vice versa, exigindo muito shuffle, ou seja , muito trafico de rede entre os nós e isso é péssimo para o spark em termos de performance.
+
+- procurar sempre filtrar os dados antes de executar as ações e transformações de forma a otimizar o código
+-sempre usar repartition (para particionar na memoria) antes de dar um write no df com partitionby, dessa forma o dado é particionado na memoria e a escrita particionada em disco fica muito mais rápida. https://mungingdata.com/apache-spark/partition-filters-pushed-filters/
+- quando uma coluna em filtro esta particionada ela é buscada direto na particao nao precisando ir nos outros dados, melhorando muito a parformance.
+- procurar sempre colocar o numero limite de arquivos para cada particao
+
+- avaliar, quando usados em joins, particionar as tabelas pelas colunas do join, dessa forma comporta-se como índice no banco relacional
+- procurar deixar todas as tabelas grandes com mesmo numero de particoes? Usar coalesce para reduzir e repartition para aumentar o numero de partições
+- Um conjunto de dados corretamente pré-particionado (mesmo numero de particoes, se uma for abaixo do tamanho do ) e pré-classificado (seria particionar pelas colunas do join?) ignorará a fase de classificação cara de uma junção SortMerge
+- A ordem de questões de junção, particularmente em consultas mais complexas. Inicie com as junções mais seletivas. Além disso, mova junções que aumentam o número de linhas após as agregações, quando possível.
+- Para gerenciar o paralelismo em junções cartesianas, você pode adicionar estruturas aninhadas, janelas e talvez ignorar uma ou mais etapas do trabalho do Spark.
+
+spark.sql.files.maxPartitionBytes 	134217728 (128 MB) The maximum number of bytes to pack into a single partition when reading files. 
+
+spark.sql.broadcastTimeout 	300 Timeout in seconds for the broadcast wait time in broadcast joins
+
+spark.sql.autoBroadcastJoinThreshold 	10485760 (10 MB) 	Configures the maximum size in bytes for a table that will be broadcast to all worker nodes when performing a join. By setting this value to -1 broadcasting can be disabled. Note that currently statistics are only supported for Hive Metastore tables where the command ANALYZE TABLE <tableName> COMPUTE STATISTICS noscan has been run. 
+
+
+spark.sql.shuffle.partitions 	200 	Configures the number of partitions to use when shuffling data for joins or aggregations. 
+
+
+Collect (Action) - Return all the elements of the dataset as an array at the driver program. This is usually useful after a filter or other operation that returns a sufficiently small subset of the data. Melhor usar select, filtrando os dados em um novo dataframe e iterar, se for o caso, sobre essa coluna.
+df2 = df.select("name","value")
+
+df2 will hold only two columns ("name" and "value") out of the entire columns of df
+
+df2 as the result of select will be in the executors and not in the driver (as in the case of using collect())
+
+
+
+Localidade dos dados: 
+
+
+Explicitar sempre o tipo de dados nos joins das queries usando cast para evitar o casting automatico do spark que as vezes pode trocar, por exemplo, double por int.
+
+sempre setar o schema ao gravar no datalake o dataframe para evitar que o spark percorra o arquivo para colocar o tipo de dado e tb para evitar erros de cast na leitura com .read()
+
+olhar esse video sobre perfomance para as dicas abaixo: https://databricks.com/session/understanding-query-plans-and-spark-uis
+quando usadas tabelas no formato orc (stored as orc), usar set spark.sql.hive.convertMetastoreOrc = true pois reader/writer nativos performam muito mais rápido do que Hive SerDe reader/writer
+sempre que criar uma orc table procurar particiona-la por alguma coluna
+
+spark.sql.optimizer.nestedSchemaPruning.enabled = true  ???? 
+uso de nonDeterministic nas udfs para nao serem chamadas varias vezes https://databricks.com/session/understanding-query-plans-and-spark-uis 17min
+
+ver os join hints broadcast, merge, shuffle_hash e shuffle_replicate_nl
+
+
+----------- script de funcoes ex: shared/functions/001-func-ajusta-tabelas
+%python
+
+from pyspark.sql.functions import udf, sha2, col, lit, row_number, concat, count
+from pyspark.sql.window import *
+from pyspark.sql.types import StringType
+
+# setStgTable - gera tabela de stage com menos partições (Usado para tabelas ja existentes)
+def setStgTable (path, tableName, partitions, colname):
+  v_tb = tableName.split(".").pop(1)+"_T"
+  
+  if colname == "null" : 
+    df = spark.table(tableName).coalesce(partitions)
+  else:
+    df = spark.table(tableName).repartition(partitions, col(colname))
+  
+  df.write.mode("overwrite").parquet(path+v_tb)
+  return path + v_tb;
+
+# getTempView - recupera dados de um path onde ela está armazenada de forma temporária
+def getTempView(path, tableName, partitions=10, colname="null") :
+  sourcePath = setStgTable(path, tableName, partitions, colname)
+  return spark.read.parquet(sourcePath).createOrReplaceTempView(tableName.split(".").pop(1)+"_T")
+
+
+def getDFtoWrite (vSql, partitions = 100, colname = "null") :
+  if colname == "null" : 
+    df = spark.sql(vSql).coalesce(partitions)
+  else:
+    df = spark.sql(vSql).repartition(partitions, col(colname))
+  return df.cache()
+
+
+# Local onde serão armazenados os aquivos 
+def getPathTempTables (folderName) :
+  return "abfss://portocredanaliticotrusted@portocredanaliticodlprd.dfs.core.windows.net/inf_tmp/" + folderName + "/"
+
+#def setRemoveAllTempFolder (folderName) :
+#  return "true"
+
+
+--- exemplo de chamada e uso do script anterior
+
+%run "/Shared/Functions/001_Func_Ajusta_Tabelas" 
+
+%python
+
+from pyspark.sql.functions import udf, sha2, col, lit, row_number, concat, count
+from pyspark.sql.window import *
+from pyspark.sql.types import StringType
+
+# Local onde serão armazenados os aquivos 
+#pathTempTables = "abfss://portocredanaliticotrusted@portocredanaliticodlprd.dfs.core.windows.net/inf_tmp/hql006/"
+pathTempTables = getPathTempTables("hql006")
+
+
+%python
+# demorado!!!!
+#CREATE TABLE INF_TRUSTEDZONE.FAT_STEP04 --STORED AS PARQUET TBLPROPERTIES ('PARQUET.COMPRESS'='SNAPPY') AS
+vSql_step04 = ("""
+SELECT  STEP03.*
+                ,CASE   WHEN ISNULL(DIM_MN.SK_MOTIVONEGACAO) THEN -1
+                                WHEN ISNULL(STEP03.MOTIVO_NEGACAO_MC) THEN -1
+                                ELSE DIM_MN.SK_MOTIVONEGACAO
+                END AS SK_MOTIVONEGACAO
+                ,CASE   WHEN ISNULL(DIM_MN.DESCRICAO_COMPLETA) THEN 'Nao existe'
+                                WHEN DIM_MN.SK_MOTIVONEGACAO = -1 THEN 'Nao existe'
+                                WHEN DIM_MN.SK_MOTIVONEGACAO = -2 THEN 'Nao informado'
+                                WHEN DIM_MN.SK_MOTIVONEGACAO = -3 THEN 'Nao se aplica'
+                                ELSE STEP03.MOTIVO_NEGACAO_MC
+                END AS MOTIVONEGACAO_DESC        
+            ----------------- inserido em 07/12 ------------------------------------------------------
+                ,CASE WHEN SK_LOJISTA != '1777'then
+
+                    CASE   WHEN TRIM(STEP03.CALC_CLIENTE) = 'CLIENTE NOVO' THEN DIM_TC.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_CLIENTE) = 'JA CLIENTE' THEN DIM_TC.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_CLIENTE) = 'Nao existe' THEN DIM_TC.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_CLIENTE) = 'Nao informado' THEN DIM_TC.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_CLIENTE) = 'Nao se aplica' THEN DIM_TC.SK_TIPOCLIENTE
+                    END 
+                   ELSE  
+                     CASE  WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'CLIENTE NOVO' THEN DIM_TC2.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'JA CLIENTE' THEN DIM_TC2.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'Nao existe' THEN DIM_TC2.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'Nao informado' THEN DIM_TC2.SK_TIPOCLIENTE
+                           WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'Nao se aplica' THEN DIM_TC2.SK_TIPOCLIENTE
+                           -- inserido para trazer o cliente paqueta----
+                           WHEN TRIM(STEP03.CALC_TIPO_CLIENTE) = 'JA CLIENTE PQT' THEN DIM_TC2.SK_TIPOCLIENTE
+                           ----
+                    END 
+                    END AS SK_TIPOCLIENTE
+            --------------------------------------------------------------------------------------------    
+                ,CASE   WHEN STEP03.NIVEL_DE_RISCO_NT = 'SEM_NIVEL_DE_RISCO' THEN 'SINR'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'ALTISSIMO RISCO' THEN 'ALTISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'ALTISSIMO_RISCO' THEN 'ALTISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'ALTO' THEN 'ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'ALTO RISCO' THEN 'ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'ALTO_RISCO' THEN 'ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO 1' THEN 'BAIXISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO 2' THEN 'BAIXISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO 3' THEN 'BAIXISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO RISCO' THEN 'BAIXISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO_RISCO' THEN 'BAIXISSIMO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXISSIMO A' THEN 'BAIXISSIMO A'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXO' THEN 'BAIXO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXO RISCO' THEN 'BAIXO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'BAIXO_RISCO' THEN 'BAIXO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'COMPROMETIMENTO_OK' THEN 'SINR'
+                                
+                                 -- WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO RISCO' THEN 'MEDIO'
+                               -- WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_RISCO' THEN 'MEDIO'
+                               -- WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_ALTO_RISCO' THEN 'MEDIO'
+                               -- WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_BAIXO_RISCO' THEN 'MEDIO'
+                               --------- solicitação Andrea 28/01/2020 -----------------------------
+                               -- WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO RISCO' THEN 'MEDIO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_RISCO' THEN 'MEDIO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_ALTO_RISCO' THEN 'MEDIO ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'MEDIO_BAIXO_RISCO' THEN 'MEDIO BAIXO'
+                               ---------------------------------------------------------------------
+    
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'MUITO ALTO' THEN 'MUITO ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'MUITO_ALTO_RISCO' THEN 'MUITO ALTO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'PRE APROVADO' THEN 'PRE APROVADO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'PRE_APROVADO' THEN 'PRE APROVADO'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = '99 ' THEN 'SINR'
+                                WHEN STEP03.NIVEL_DE_RISCO_NT = 'SEM_INF_NIVEL_DE_RISCO' THEN 'SINR'
+                        ELSE STEP03.NIVEL_DE_RISCO_NT       
+                END AS NIVEL_DE_RISCO_NT2
+                
+FROM    FAT_STEP03_T STEP03
+                LEFT JOIN DIM_MOTIVOSNEGACAO_T DIM_MN ON TRIM(UCASE(STEP03.MOTIVO_NEGACAO_MC)) = TRIM(UCASE(DIM_MN.DESCRICAO_COMPLETA))
+                LEFT JOIN DIM_TIPOCLIENTE_FULL_T DIM_TC ON TRIM(UCASE(STEP03.CALC_CLIENTE)) = TRIM(UCASE(DIM_TC.TIPOCLIENTE_NOME))
+                LEFT JOIN DIM_TIPOCLIENTE_FULL_T DIM_TC2 ON TRIM(UCASE(STEP03.CALC_TIPO_CLIENTE)) = TRIM(UCASE(DIM_TC2.TIPOCLIENTE_NOME))""")
+
+
+--- recupera e recria tabelas temporarias de forma mais otimizada
+%python
+
+getTempView(pathTempTables,"INF_REFINEDZONE.DIM_MOTIVOSNEGACAO",1)
+getTempView(pathTempTables,"INF_REFINEDZONE.DIM_TIPOCLIENTE_FULL",1)
+getTempView(pathTempTables,"INF_TRUSTEDZONE.FAT_STEP03", 30)
+
+-- gera step4
+
+%python
+
+vTableName = "INF_TRUSTEDZONE.FAT_STEP04"
+spark.sql("DROP TABLE IF EXISTS " + vTableName)
+
+df = getDFtoWrite(vSql_step04, 50)
+df.write.saveAsTable(vTableName)
+df.unpersist
+
+%sql
+uncache table DIM_MOTIVOSNEGACAO_T;
+uncache table DIM_TIPOCLIENTE_FULL_T;
+uncache table FAT_STEP03_T;
+
+%sql
+DROP TABLE if exists INF_TRUSTEDZONE.FAT_STEP05;
+
+%sql
+
+CREATE TABLE INF_TRUSTEDZONE.FAT_STEP05 --STORED AS PARQUET TBLPROPERTIES ('PARQUET.COMPRESS'='SNAPPY') AS
+SELECT  *
+                ,CASE   --ALTISSIMO
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) IN (1, 2, 3, 4, 5, 6, 9) AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_18'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND PROP_PRODUTO='CHEQUE' AND CALC_CLIENTE='JA CLIENTE') THEN 'FAIXA_18'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND PROP_PRODUTO='CHEQUE' AND CALC_CLIENTE='CLIENTE NOVO') THEN 'FAIXA_14'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND (CALC_NS_SCORE_INTERNO <> '0.00' OR CALC_NS_SCORE_INTERNO <> ' ' OR CALC_NS_SCORE_INTERNO <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_13'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND (CALC_SCORE_JA_CLIENTE <> '0.00' OR CALC_SCORE_JA_CLIENTE <> ' ' OR CALC_SCORE_JA_CLIENTE <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_14'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTISSIMO' AND (CALC_SCORE_BVS <> '0.00' OR CALC_SCORE_BVS <> ' ' OR CALC_SCORE_BVS <> '')  AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_15'
+                                --MUITO ALTO
+                                WHEN (NIVEL_DE_RISCO_NT2='MUITO ALTO' AND (CALC_NS_SCORE_INTERNO <> '0.00' OR CALC_NS_SCORE_INTERNO <> ' ' OR CALC_NS_SCORE_INTERNO <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_12'
+                                --ALTO
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTO' AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_12'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTO' AND (CALC_NS_SCORE_INTERNO <> '0.00' OR CALC_NS_SCORE_INTERNO <> ' ' OR CALC_NS_SCORE_INTERNO <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_11'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTO' AND (CALC_SCORE_JA_CLIENTE <> '0.00' OR CALC_SCORE_JA_CLIENTE <> ' ' OR CALC_SCORE_JA_CLIENTE <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_13'
+                                WHEN (NIVEL_DE_RISCO_NT2='ALTO' AND (CALC_SCORE_BVS <> '0.00' OR CALC_SCORE_BVS <> ' ' OR CALC_SCORE_BVS <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_13'
+                                --MEDIO
+                                WHEN (NIVEL_DE_RISCO_NT2='MEDIO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) IN (1, 2, 3, 4, 5, 6, 9) AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_10'
+                                WHEN (NIVEL_DE_RISCO_NT2='MEDIO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND CALC_CLIENTE='JA CLIENTE'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_10'
+                                WHEN (NIVEL_DE_RISCO_NT2='MEDIO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND CALC_CLIENTE='CLIENTE NOVO'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_11'
+                                WHEN (NIVEL_DE_RISCO_NT2='MEDIO' AND (CALC_SCORE_JA_CLIENTE <> '0.00' OR CALC_SCORE_JA_CLIENTE <> ' ' OR CALC_SCORE_JA_CLIENTE <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_12'
+                                WHEN (NIVEL_DE_RISCO_NT2='MEDIO' AND (CALC_SCORE_BVS <> '0.00' OR CALC_SCORE_BVS <> ' ' OR CALC_SCORE_BVS <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_12'
+                                --BAIXO
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) IN (1, 2, 3, 4, 5, 6, 9)  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_9'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND CALC_CLIENTE='JA CLIENTE'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_9'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND CALC_CLIENTE='CLIENTE NOVO'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_10'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXO' AND (CALC_SCORE_JA_CLIENTE <> '0.00' OR CALC_SCORE_JA_CLIENTE <> ' ' OR CALC_SCORE_JA_CLIENTE <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_10'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXO' AND (CALC_SCORE_BVS <> '0.00' OR CALC_SCORE_BVS <> ' ' OR CALC_SCORE_BVS <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_11'
+                                --BAIXISSIMO
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) IN (1, 2, 3, 4, 5, 6, 9) AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_7'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9)  AND CALC_CLIENTE='JA CLIENTE'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_7'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXISSIMO' AND CAST(PROP_TIPO_OFERTA_PRE_APROVADO AS INT) NOT IN (1, 2, 3, 4, 5, 6, 9) AND CALC_CLIENTE='CLIENTE NOVO'  AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_9'
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXISSIMO' AND (CALC_SCORE_JA_CLIENTE <> '0.00' OR CALC_SCORE_JA_CLIENTE <> ' ' OR CALC_SCORE_JA_CLIENTE <> '') AND (PROP_PRODUTO='CARNE' OR PROP_PRODUTO='DEBITO')) THEN 'FAIXA_9'
+                                --BAIXISSIMO A
+                                WHEN (NIVEL_DE_RISCO_NT2='BAIXISSIMO A' AND PROP_PRODUTO='CHEQUE') THEN 'FAIXA_5'
+                                --SINR
+                                WHEN (NIVEL_DE_RISCO_NT2='SINR') THEN 'SINR'
+                                --PRÉ APROVADO
+                                WHEN (NIVEL_DE_RISCO_NT2='PRE APROVADO') THEN 'PRE APROVADO'
+                                WHEN (NIVEL_DE_RISCO_NT2='SEM_PRODUTO') THEN 'SINR'
+                                WHEN (ISNULL(NIVEL_DE_RISCO_NT2) OR NIVEL_DE_RISCO_NT2 = '') THEN 'SINR'
+                                        ELSE NIVEL_DE_RISCO_NT2
+                                        END AS NIVEL_DE_RISCO_NT3
+FROM INF_TRUSTEDZONE.FAT_STEP04
+
+vSql_preFato = ("""SELECT 
+                F05.*,
+                DIM_NR.SK_NIVELDERISCO AS SK_NIVELDERISCO,
+                DIM_NR.DESCRICAO AS NIVEL_DE_RISCO,
+	  CASE
+				WHEN F05.SITUACAO_PROPOSTA = 20
+					THEN 'APROVADO EFETIVADO'
+				WHEN F05.SITUACAO_PROPOSTA = 07
+					THEN
+						CASE F05.MOTIVO_NEGACAO_MC 
+							WHEN 'POLITICA' THEN 'POLITICA'
+							WHEN 'REQUISITOS MINIMOS' THEN 'REQUISITOS MINIMOS'
+							WHEN 'RESTRITIVO INTERNO' THEN 'RESTRITIVO INTERNO'
+							WHEN 'RESTRITIVO EXTERNO' THEN 'RESTRITIVO EXTERNO'
+							WHEN 'OFERTA' THEN 'OFERTA'
+							WHEN 'PRODUTO' THEN 'PRODUTO'
+							WHEN 'REPROVACAO PARCEIRO' THEN 'REPROVACAO PARCEIRO'
+						END
+				WHEN F05.SITUACAO_PROPOSTA IN (50, 51, 52, 53)    
+				 OR  (F05.SituacaoAnterior IN (50,51,52,53) AND F05.SITUACAO_PROPOSTA = 1)
+				 OR  (F05.SITANTERIOR IN (50,51,52,53) AND F05.SITUACAO_PROPOSTA = 99)
+				 OR  (F05.SituacaoAnterior IN (50,51,52,53) AND F05.SITUACAO_PROPOSTA = 61)
+					THEN 'SELECAO DE OFERTA'
+				WHEN F05.SITUACAO_PROPOSTA = 17
+					THEN 'MESA'
+                WHEN SK_FAMILIAPRODUTO = 10 THEN
+					CASE
+                        WHEN
+                          F05.SITUACAO_PROPOSTA IN (36,39)
+                            OR  (F05.SITANTERIOR IN (36,39) AND F05.SITUACAO_PROPOSTA = 99)
+                            OR  (F05.SituacaoAnterior IN (36,39) AND F05.SITUACAO_PROPOSTA = 61)
+                        THEN 'APROVADA RH'
+                        WHEN F05.SITUACAO_PROPOSTA = 35
+                            OR  (F05.SITANTERIOR = 35 AND F05.SITUACAO_PROPOSTA = 99)
+                            OR  (F05.SituacaoAnterior = 35 AND F05.SITUACAO_PROPOSTA = 61)
+                        THEN 'PENDENTE AVERBACAO'
+                        WHEN F05.SITUACAO_PROPOSTA = 37
+                            OR  (F05.SITANTERIOR = 37 AND F05.SITUACAO_PROPOSTA = 99)
+                            OR  (F05.SituacaoAnterior = 37 AND F05.SITUACAO_PROPOSTA = 61)
+                        THEN 'REPROVADA RH'
+                        WHEN  F05.SITUACAO_PROPOSTA = 38 AND (F05.SITANTERIOR IN (03,05,35) OR F05.SITANTERIOR IS NULL OR F05.SITUACAOANTERIOR IN (35,03)) 
+                        THEN 'EXPIRADA RH'
+                        WHEN F05.SITUACAO_PROPOSTA IN (02,04,05,10,22,30,31,63)
+                            OR (F05.SituacaoAnterior IN (02,04,05,10,22,30,31,63) AND F05.SITUACAO_PROPOSTA = 61)
+                            OR (F05.SitAnterior IN (02,04,05,10,22,30,31,63) AND F05.SITUACAO_PROPOSTA = 99)
+                            OR (F05.SITUACAO_PROPOSTA = 07 AND MOTIVO_NEGACAO_MC IN ('OFERTA','PRODUTO'))
+                            OR (F05.SituacaoAnterior = 07 AND F05.SITUACAO_PROPOSTA = 61 AND F05.MOTIVO_NEGACAO_MC IN ('OFERTA','PRODUTO'))   
+                        THEN 'SEM INTERESSE'
+					END
+            --outros produtos
+                ELSE
+					CASE
+                        WHEN F05.SITUACAO_PROPOSTA IN (21,34,40,41,46,47,64,65,66,67)
+                            OR  F05.SITANTERIOR IN (6,16,21,23,28,92,32,34,39,40,41,46,47,64,65,66,67) AND F05.SITUACAO_PROPOSTA = 99
+                            OR  F05.SituacaoAnterior IN (6,16,21,23,28,92,32,34,39,40,41,46,47,64,65,66,67) AND F05.SITUACAO_PROPOSTA = 61
+                            OR  F05.SituacaoAnterior IN (36,39) AND F05.SITUACAO_PROPOSTA = 38
+                        THEN 'APROVADO NAO EFETIVADO'
+                        WHEN F05.SITUACAO_PROPOSTA = 31 AND DIM_NR.DESCRICAO IN ('SINR','PRE APROVADO','')
+                            OR  F05.SITANTERIOR = 31 AND F05.SITUACAO_PROPOSTA = 99 AND DIM_NR.DESCRICAO IN ('SINR','PRE APROVADO','')
+                            OR  F05.SITANTERIOR = 31 AND F05.SITUACAO_PROPOSTA = 61 AND DIM_NR.DESCRICAO IN ('SINR','PRE APROVADO','')
+                        THEN 'COMPLEMENTAR CADASTRO COM SCORE'
+                        WHEN F05.SITUACAO_PROPOSTA = 31 AND NIVEL_DE_RISCO_NT3 NOT IN ('SINR','PRE APROVADO','')
+                            OR  F05.SITANTERIOR = 31 AND F05.SITUACAO_PROPOSTA = 99 AND DIM_NR.DESCRICAO NOT IN ('SINR','PRE APROVADO','')
+                            OR  F05.SituacaoAnterior = 31 AND F05.SITUACAO_PROPOSTA = 61 AND DIM_NR.DESCRICAO NOT IN ('SINR','PRE APROVADO','')
+                        THEN 'COMPLEMENTAR CADASTRO SEM SCORE'
+                        WHEN F05.SITUACAO_PROPOSTA IN (1,2,3,4,5,10,22,30,31,35,63)    
+                            OR  (F05.SITANTERIOR IN (1,2,3,4,5,10,22,30,31,35,63) AND F05.SITUACAO_PROPOSTA = 99)
+                            OR  (F05.SituacaoAnterior IN (2,3,4,5,10,22,30,31,35,63) AND F05.SITUACAO_PROPOSTA = 61)
+                        THEN 'PENDENTE'
+                
+				END
+			END AS STATUSPROPOSTA
+     
+        ------------------------------------------------------
+FROM    FAT_STEP05_T F05
+                LEFT JOIN DIM_NIVELDERISCO_T DIM_NR  ON TRIM(UCASE(F05.NIVEL_DE_RISCO_NT3)) = TRIM(UCASE(DIM_NR.DESCRICAO))""")
+				
+				
+getTempView(pathTempTables,"INF_REFINEDZONE.DIM_NIVELDERISCO",1)
+getTempView(pathTempTables,"INF_TRUSTEDZONE.FAT_STEP05",40)
+
+
+vTargetTable = "INF_TRUSTEDZONE.PRE_FATOS"
+spark.sql("DROP TABLE IF EXISTS " + vTargetTable)
+
+df = getDFtoWrite(vSql_preFato)\
+.withColumn("SK", concat("PROPOSTA", row_number().over(Window.partitionBy("PROPOSTA").orderBy(lit(1)))).cast("string"))\
+.withColumn("SK_FATODRILL", sha2(col("SK"),256)).repartition(50,"PROPOSTA")
+
+df.write.mode("overwrite").saveAsTable(vTargetTable)
+
+df.unpersist()
+
+%sql
+uncache table DIM_NIVELDERISCO_T;
+uncache table FAT_STEP05_T;	
+
+
+#Particionamento no Spark
+#repartition e particion by exemplos
+
+https://kontext.tech/column/spark/296/data-partitioning-in-spark-pyspark-in-depth-walkthrough
+
+Durante o processamento, o Spark atribui uma tarefa para cada partição* e os encadeamentos de cada worker podem processar apenas uma tarefa por vez. Assim, com poucas partições, o aplicativo não utilizará todos os núcleos disponíveis no cluster e pode causar problemas de distorção de dados; com muitas partições, isso sobrecarregará o Spark para gerenciar muitas tarefas pequenas.
+
+* the number of tasks depends on the number of partitions of the output of the stage - ver melhor isso
+
+#Exemplo de criação para testes
+
+from pyspark.sql.functions import year, month, dayofmonth
+from pyspark.sql import SparkSession
+from datetime import date, timedelta
+from pyspark.sql.types import IntegerType, DateType, StringType, StructType, StructField
+
+appName = "PySpark Partition Example"
+master = "local[8]"
+
+# Create Spark session with Hive supported.
+spark = SparkSession.builder \
+    .appName(appName) \
+    .master(master) \
+    .getOrCreate()
+
+
+print(spark.version)
+# Populate sample data
+start_date = date(2019, 1, 1)
+data = []
+for i in range(0, 50):
+    data.append({"Country": "CN", "Date": start_date +
+                 timedelta(days=i), "Amount": 10+i})
+    data.append({"Country": "AU", "Date": start_date +
+                 timedelta(days=i), "Amount": 10+i})
+
+schema = StructType([StructField('Country', StringType(), nullable=False),
+                     StructField('Date', DateType(), nullable=False),
+                     StructField('Amount', IntegerType(), nullable=False)])
+
+df = spark.createDataFrame(data, schema=schema)
+df.show()
+print(df.rdd.getNumPartitions())
+
+The above scripts instantiates a SparkSession locally with 8 worker threads. It then populates 100 records (50*2) into a list which is then converted to a data frame.
+
+    print(df.rdd.getNumPartitions())
+
+For the above code, it will prints out number 8 as there are 8 worker threads. By default, each thread will read data into one partition. 
+
+por padrão , cada worker lê dados de 1 partição, então se eu criar um dataframe no modo default, serão criadas 8 partições baseadas no número de workers
+
+df.write.mode("overwrite").csv("data/example.csv", header=True) - rodar e pegar o resultado
+
+#Coalesce:
+
+Não faz reshuffle, ou seja, nao adianta colocar um numero maior do que o numero de linhas do dataframe. ex. se um arquivo tem 100 linhas, e for setado 10, cada particao tera 10 arquivos (10x10 = 100), se o coalesce for 4, ira criar arquivos(particao) em cada uma contendo 25 linhas dentro de cada arquivo, log o numero maximo do coalesce podera ser 100, onde cada particao teria 1 arquivo(particao) correspondente a 1 linha.
+
+#Repartition
+
+O repartition faz reshuffling, ou seja, eu posso colcoar um numero maior de particoes se eu quiser, no caso as demais se passar do numero de linhas irão ficar vazias. Ex. se fizer um repartition 10, ira gerar 10 particoes(arquivos) com 10 linhas me cada arquivo. se colocar repartition 1000, ele ira gerar 1000 particoes mas somente 100 serao populadas, o restante ficando vazias.	
+
+#particionamento por numero
+df = df.repartition(10)
+print(df.rdd.getNumPartitions())
+df.write.mode("overwrite").csv("data/example.csv", header=True)
+
+#particionamento por uma ou mais colunas
+
+df = df.withColumn("Year", year("Date")).withColumn(
+"Month", month("Date")).withColumn("Day", dayofmonth("Date"))
+df = df.repartition("Year", "Month", "Day", "Country")
+print(df.rdd.getNumPartitions())
+df.write.mode("overwrite").csv("data/example.csv", header=True)
+
+df.write.partitionBy("Year", "Month", "Day", "Country").mode(
+"overwrite").csv("data/example.csv", header=True)
+
+#leitura de partições
+
+df = spark.read.option("basePath", "data/example.csv/").csv(
+"data/example.csv/Year=*/Month=2/Day=*/Country=AU")
+print(df.rdd.getNumPartitions())
+df.show()
+
+#busca numero de particoes dataframe
+print(df.rdd.getNumPartitions())
+
+Através do particionamento, maximizamos o uso paralelo do cluster Spark, reduzimos a distorção de dados e o espaço de armazenamento para obter melhor desempenho. Essa é uma prática comum de design em estruturas MPP. Ao projetar a estratégia de partição de serialização (gravar partições em sistemas de arquivos), é necessário levar em consideração os caminhos de acesso, por exemplo, suas chaves de partição são comumente usadas em filtros?
+
+No entanto, particionamento não significa que quanto melhor, como mencionado em todos os inícios desta postagem. O Spark recomenda 2-3 tarefas por núcleo de CPU em seu cluster. Por exemplo, se você possui 1000 núcleos de CPU no cluster, o número de partição recomendado é de 2000 a 3000. Às vezes, depende da distribuição e assimetria dos dados de origem, você precisa ajustar para descobrir a estratégia de particionamento apropriada.
+
+
+
+What is Apache Spark?
+
+Apache, in 2012, described the Resilient distributed dataset (RDD) foundation with read-only Distributed datasets on distributed clusters and named it as Apache Spark. Later, they introduce Dataset API and then Dataframe APIs for batch and structured streaming of data.This article lists out the best Apache Spark Optimization Techniques.
+
+Apache Spark is a fast cluster computing platform developed for performing more computations and stream processing. Spark can handle a wide variety of workloads as compared to traditional systems that require multiple systems to run and support. Data analysis pipelines are facilitated by Spark in Combination of different processing types which is necessary for production. Apache Spark is created to operate with an external cluster manager such as YARN or its stand-alone manager.Some Features of Apache Spark include –
+
+    Unified Platform for writing big data applications.
+    Ease of development.
+    Designed to be highly accessible.
+    Spark can run independently. Thus it gives flexibility.
+    Cost Efficient.
+
+    XenonStack provides analytics Services and Solutions for Real-time and Stream Data Ingestion, processing, and analysing the data streams quickly and efficiently for the Internet of Things, Monitoring, Preventive and Predictive Maintenance.
+
+    From the Article, Streaming and Real-Time Analytics Services
+
+Understanding How Apache Spark Optimization Works?
+The architecture of Apache Spark
+
+The Run-time architecture of Spark consists of three parts –
+
+Spark Driver (Master Process) – The Spark Driver convert the programs into tasks and Schedule the tasks for Executors. The Task Scheduler is the part of Driver and helps to distribute tasks to Executors.
+
+Spark Cluster Manager – Cluster manager, is the core in Spark that allows to launch executors and sometimes drivers can be launched by it also. Spark Scheduler schedules the actions and jobs in Spark Application in FIFO way on cluster manager itself.
+
+Executors (Slave Processes) – Executors are the individual entities on which individual task of Job runs. Executors will always run till the lifecycle of a spark Application once they are launched. Failed executors don’t stop the execution of spark job.
+
+RDD (Resilient Distributed Datasets) – A RDD is a distributed collection of immutable datasets on distributed nodes of the cluster. An RDD is partitioned into one or many partitions. RDD is the core of spark as their distribution among various nodes of the cluster that leverages data locality. To achieve parallelism inside the application, Partitions are the units for it. Repartition or coalesce transformations can help to maintain the number of partitions. Data access is optimized utilizing RDD shuffling. As Spark is close to data, it sends data across various nodes through it and creates required partitions as needed.
+
+DAG (Directed Acyclic Graph) – Spark tends to generate an operator graph when we enter
+
+Our code to Spark console. When an action is triggered to Spark RDD, Spark submits that graph to the DAGScheduler. It then divides those operator graphs to stages of the task inside DAGScheduler. Every step may contain jobs based on several partitions of the incoming data. The DAGScheduler pipelines those individual operator graphs together. For Instance, Map operator graphs schedule for a single stage and these stages pass on to the. Task Scheduler in cluster manager for their execution. This is the task of Worke=s or Executors to execute these tasks on the slave.
+Distributed processing using partitions efficiently
+
+Increasing the number of Executors on clusters also increases parallelism in processing Spark Job. But for this, one must have adequate information about how that data would be distributed among those executors via partitioning. RDD is helpful for this case with negligible traffic for data shuffling across these executors. One can customize the partitioning for pair RDD (RDD with key-value Pairs). Spark assures that set of keys will always appear together in the same node because there is no explicit control in this case.
+
+    Apache Spark security aids authentication through a shared secret. Spark authentication is the configuration parameter through which authentication can be configured. It is the parameter which checks whether the protocols of the spark communication are doing authentication using a shared secret or not.
+
+    From the Article, Apache Spark Security
+
+Mistakes to avoid while writing Spark Applications
+
+reduceByKey or groupByKey – Both groupByKey and reduceByKey produce the same answer but concept to produce results are different. reduceByKey is best suitable for large dataset because in Spark it combines output with a shared key for each partition before shuffling of data. While on the other side, groupByKey shuffles all the key-value pairs. GroupByKey causes unnecessary shuffles and transfer of data over the network.
+
+Maintain the required size of the shuffle blocks – By default Spark shuffle block cannot exceed 2GB. The better use is to increase partitions and reduce its capacity to ~128MB per partition that will reduce the shuffle block size. We can use repartition or coalesce in regular applications. Large partitions make the process slow due to a limit of 2GB, and few partitions don’t allow to scale the job and achieve the parallelism.
+
+File Formats and Delimiters – Choosing right File formats for each data related specification is a headache. One must choose wisely the data format for Ingestion types, Intermediate type, and Final output type. We can also Classify the data file formats for each type in several ways such as we can use AVRO file format for storing Media data as Avro is best optimized for binary data than Parquet. Parquet can be used for storing metadata information as it is highly compressed.
+
+Small data files – Broadcasting is a technique to load small data files or datasets into Blocks of memory so that they can be joined with more massive data sets with less overhead of shuffling data. For Instance, We can store Small data files into n number of Blocks and Large data files can be joined to these data Blocks in future as Large data files can be distributed among these blocks in a parallel fashion.
+
+No Monitoring of job stages – DAG is a data structure used in Spark that describes various stages of tasks in Graph format. Most of the developers write and execute the code, but monitoring of Job tasks is essential. This monitoring is best achieved by managing DAG and reducing the stages. The Job with 20 steps is prolonged as compared to a job with 3-4 Stages.
+
+ByKey, repartition or any other operations which trigger shuffles – Most of the times we need to avoid shuffles as much as we can as data shuffles across many, and sometimes it becomes very complex to obtain Scalability out of those shuffles. GroupByKey can be a valuable asset, but its need must be described first.
+
+Reinforcement learning – Reinforcement Learning is not only the concept to obtain better Machine learning environment but also to process decisions in a better way. One must apply deep reinforcement Learning in spark if the transition model and reward model are built correctly on data sets and also agents are capable enough to estimate the results.
+Apache Spark Optimization Factors and Techniques
+
+One of the best features of Apache Spark optimization is it helps for In-memory data computations. The bottleneck for these spark optimization computations can be CPU, memory or any resource in the cluster. A need to serialize the data, reduce the memory may arise in such cases. These factors for spark optimization, if properly used, can –
+
+    Eliminate the long-running job process
+    Correction execution engine
+    Improves performance time by managing resources
+
+Key Factors for Apache Spark Optimization –
+Using Accumulators
+
+Accumulators are global variables to the executors that can only be added through an associative and commutative operation. It can, therefore, be efficient in parallel. Accumulators can be used to implement counters (same as in Map Reduce) or another task such as tracking API calls. By default, Spark supports numeric accumulators, but programmers have the advantage to add support for new types. Spark ensures that each task’s update will only be applied once to the accumulator variables. During transformations, users should have an awareness of each task’s update as these can be applied more than once if job stages are re-executed.
+Hive Bucketing Performance
+
+Bucketing results with a fixed number of files as we specify the number of buckets with a bucket. Hive took the field, calculate the hash and assign a record to that particular bucket. Bucketing is more stable when the field has high cardinality and records are evenly distributed among all buckets whereas partitioning works when the cardinality of the partitioning field is low. Bucketing reduces the overhead of sorting files. For Instance, if we are joining two tables that have an equal number of buckets in it, spark joins the data directly as keys already sorted buckets. The number of bucket files can be calculated as several partitions into several buckets.
+Predicate Pushdown Optimization
+
+Predicate pushdown is a technique to process only the required data. Predicates can be applied to SparkSQL by defining filters in where conditions. By using explain command to query we can check the query processing stages. If the query plan contains PushedFilter than the query is optimized to select only required data as every predicate returns either True or False. If there is no PushedFilter found in query plan than better is to cast the where condition. Predicate Pushdowns limits the number of files and partitions that SparkSQL reads while querying, thus reducing disk I/O. Querying on data in buckets with predicate push downs produce results faster with less shuffle.
+Zero Data Serialization/Deserialization using Apache Arrow
+
+Apache Arrow is used as an In-Memory run-time format for analytical query engines. Arrow provides data serialization/deserialization zero shuffles through shared memory. Arrow flight sends the large datasets over the network. Arrow has its arrow file format that allows zero-copy random access to data on-disks. Arrow has a standard data access layer for all spark applications. It reduces the overhead for SerDe operations for shuffling data as it has a common place where all data is residing and in arrow specific format.
+Garbage Collection Tuning using G1GC Collection
+
+When tuning garbage collectors, we first recommend using G1 GC to run Spark applications. The G1 garbage collector entirely handles growing heaps that are commonly seen with Spark. With G1, fewer options will be needed to provide both higher throughput and lower latency. To control unpredictable characteristics and behaviors of various applications GC tuning needs to be mastered according to generated logs. Before this, other optimization techniques in the program’s logic and code must be applied. Most of the time, G1GC helps to optimize the pause time between processes that are quite often in Spark applications, thus decreases the Job execution time with a more reliable system.
+Memory Management and Tuning
+
+As we know that, for computations such as shuffling, sorting and so on, Execution memory is used whereas for caching purposes storage memory is used that also propagates internal data. There might be some cases where jobs are not using any cache; therefore, cases out of space error during execution. Cached jobs always apply less storage space where the data is not allowed to be evicted by any execution requirement. We can set spark.memory.fraction to determine how much JVM heap space is used for Spark execution memory. Commonly, 60% is the default. Executor memory must be kept as less as possible because it may lead to delay of JVM Garbage collection. This fact is also applicable for small executors as multiple tasks may run on a single JVM instance.
+Data locality
+
+In Apache Spark, Processing tasks are optimized by placing the execution code close to the processed data, called data locality. Sometimes processing task has to wait before getting data because data is not available. However, when the time of spark.locality.wait expires, Spark tries less local level, i.e. Local to the node to rack to any. Transferring data between disks is very costly, so most of the operations must be performed at the place where data resides. It helps to load only small but required the amount of data.
+Using Collocated Joins
+
+Collocated joins make decisions of redistribution and broadcasting. We can define small datasets to be located into multiple blocks of memory for achieving better use of Broadcasting. While applying joins on two datasets, spark First sort the data of both datasets by key and them merge. But we can also apply sortByPartition key before joining them or while creating those data frames. This will optimize the run-time of the query as there would be no unnecessary function calls to sort.
+Caching in Spark
+
+Caching is the best technique for Apache Spark Optimization when we need some data again and again. But it is always not acceptable to cache data. We have to use cache () RDD and DataFrames in any of the following cases –
+
+    When there is an iterative loop such as in Machine learning algorithms.
+    When RDD is accessed multiple times in a single job or task.
+    When the cost to generate the RDD partitions again is higher.<l/i>
+
+Cache () and persist (StorageLevel.MEMORY_ONLY) can be used in place of each other. Every RDD partition which gets evicted out of the memory is required to be build again from the source that still is very expensive. One of the best solutions is to use persist (Storage level.MEMORY_AND_DISK_ONLY ) that would spill the partitions of RDD to the Worker’s local disk. This case only requires getting data from the Worker’s local drive which is relatively fast.
+Executor Size
+
+When we run executors with high memory, it often results in excessive delays in garbage collection. We need to keep the cores count per executor below five tasks per executor. Too small executors didn’t come out be handy in terms of running multiple jobs on single JVM. For Instance, broadcast variables must be replicated for each executor exactly once, that will result in more copies of the data.
+Spark Windowing Function
+
+A window function defines a frame through which we can calculate input rows of a table. On individual row level. Each row can have a clear framework. Windowing allows us to define a window for data in the data frame. We can compare multiple rows in the same data frame. We can set the window time to a particular interval that will solve the issue of data dependency with previous data. Shuffling is less on previously processed data as we are retaining that data for window interval.
+Watermarks Technique
+
+Watermarking is a useful technique in Apache Spark Optimization that constrains the system by design and helps to prevent it from exploding during the run. Watermark takes two arguments –
+
+    column for event time and
+    a threshold time that specify for how long we are required to process late data
+
+The query will automatically get updated if data fall within that stipulated threshold; otherwise, no processing is triggered for that delayed data. One must remember that we can use Complete-mode side by side with watermarking because full mode first persists all the data to the resulting table.
+Data Serialization
+
+Apache Spark optimization works on data that we need to process for some use cases such as Analytics or just for movement of data. This movement of data or Analytics can be well performed if data is in some better-serialized format. Apache Spark supports Data serialization to manage the data formats needed at Source or Destination effectively. By Default, Apache Spark uses Java Serialization but also supports Kryo Serialization. By Default, Spark uses Java’s ObjectOutputStream to serialize the data. The implementation can be through the java.io.Serializable class. It encodes the objects into a stream of bytes. It provides lightweight persistence and flexible. But it becomes slow as it leads to huge serialized formats for each class it is used in. Spark supports Kryo Serialization library (v4) for Serialization of objects nearly 10x faster than Java Serialization as it is more compact than Java.
+
+
+https://medium.com/teads-engineering/spark-performance-tuning-from-the-trenches-7cbde521cf60
+
+We regularly use small DataFrames, for example when we want to cross a billion auctions with a website list we choose to broadcast the latter to all the executors and avoid a shuffle.
+
+auction
+.join(broadcast(website) as “w”, $”w.id” === $”website_id”)
+
+The broadcast keyword allows to mark a DataFrame that is small enough to be used in broadcast joins.
+
+Broadcast allows to send a read-only variable cached on each node once, rather than sending a copy for all tasks. We try to systematically broadcast small datasets coming from static databases. It’s a quick win as it’s only a single line of code to modify.
+
+Inappropriate use of caching
+
+There is no universal answer when choosing what should be cached. Caching an intermediate result can dramatically improve performance and it’s tempting to cache a lot of things. However, due to Spark’s caching strategy (in-memory then swap to disk) the cache can end up in a slightly slower storage. Also, using that storage space for caching purposes means that it’s not available for processing. In the end, caching might cost more than simply reading the DataFrame.
+
+Para descobrir o tamanho do dataframe em bytes:
+
+import org.apache.spark.util.SizeEstimator
+println(SizeEstimator.estimate(distFile))
+
+
+df.persist(StorageLevel.Memory)
+df.count()
+#On the spark-web ui under the Storage tab you can check the size which is displayed in MB's and then I do unpersist to clear the memory.
+df.unpersist()
+
+
+
+Highly imbalanced datasets
+
+To quickly check if everything is ok we review the execution duration of each task and look for heterogeneous process time. If one of the tasks is significantly slower than the others it will extend the overall job duration and waste the resources of the fastest executors.
+
+It’s fairly easy to check min, max and median duration in Spark UI.
+
+2- Look under the hood
+
+Analysing Spark’s execution plan is an easy way to spot potential improvements. This plan is composed of stages, which are the physical units of execution in Spark. When we refactor our code, the first thing we look for is an abnormal number of stages. A suspicious plan can be one requiring 10 stages instead of 2–3 for a basic join operation between two DataFrames.
+
+In Spark and more generally in distributed computing, sending data over the network (a.k.a. Shuffle in Spark) is the most expensive action. Shuffles are expensive since they involve disk I/O, data serialization and network I/O. They are needed for operations like Join or groupBy and happen between stages.
+
+Considering this, reducing the number of stages is a obvious way to optimize a job. We use the .explain(true) command to show the execution plan detailing all the steps (stages) involved for a job
+
+
+Spark tips:
+
+gravar dataframe no datalake: df.write.option("schema",schema).mode("overwrite").partitionBy("coluna").parquet('abfss://portocredanaliticotrusted@portocredanaliticodlprd.dfs.core.windows.net/inf_tmpworkarea/df_contratos_alterar_S')
+
+ler dataframe do datalake: spark.read.option("schema",schema).parquet('abfss://portocredanaliticotrusted@portocredanaliticodlprd.dfs.core.windows.net/inf_tmpworkarea/df_contratos_alterar_N_tmp').createOrReplaceTempView('df_contratos_alterar_N_tmp')
+
+eliminar tempview: spark.catalog.dropTempView("nome_temp_view")
+
+eliminar dataframe do cache: df.unpersist()
+
+cache com tempview: df.cache().createOrReplaceTempView('nome_temp_view')
+
+cast: col("coluna").cast(DecimalType(17,2)
+
+join: df = df1.join(df2,df1.coluna == df2.coluna)
+
+criar nova coluna no dataframe: df.withColumn('NOME',regra)
+
+select no dataframe: df = df.select(col("col1"),col("col2"))
+
+distinct: df.select("col1","col2").distinct()
+
+calcular diferenca entre datas: datediff(col("dt1"),col("dt2"))
+case when: df = df.withColumn("NOVA_COLUNA",when(col("sit_parc_comp") == 'L',datediff(col("pgto_comp"),col("vcto_comp"))) \
+        .when((col("sit_parc_comp") == 'A') & (col("vcto_comp") > col("dt_corte")),'0') \
+        .when((col("sit_parc_comp") == 'A') & (col("vcto_comp") < col("dt_corte")) & (col("pgto_comp") == ''), datediff(col("dt_corte"),col("vcto_comp"))) \
+        .otherwise(datediff(col("pgto_comp"),col("vcto_comp"))))
+(cuidar os parenteses separados as clausulas entre os AND (&)
+
+
+LIKE E NOT LIKE
+
+df.withColumn('FLAG_LIDER',\
+      f.when((f.col('NOME').like("PRESIDENTE%"))& ~(f.col('NOME').like('%CIPA%'))& ~(f.col('NOME').like('%CONSELHO%')),f.lit('S'))\
+      .when((f.col('NOME').like("VICE PRESIDENTE%"))& ~(f.col('NOME').like('%CIPA%'))& ~(f.col('NOME').like('%CONSELHO%')),f.lit('S'))\
+      .when((f.col('NOME').like("%LIDER%"))|\
+
+Inserir uma coluna baseada em um literal : df = df.withColumn('NOME_COLUNA',lit(VARIAVEL_STRING))
+
+case when mais amigavel: usar EXPR("case when col = xxx then hhh else rrr end")
+
+tratamento de nulos: (col("NOME_COLUNA").isNull()) -- mesmo que a coluna tenha valores "null"
+
+schema com struct type: schema = StructType([
+	StructField("cpf_n", StringType(), True),
+	StructField("contratoliq", DecimalType(), True),
+	StructField("contratonovo", IntegerType(), True)])
+	
+libs mais usadas:
+
+import pyspark.sql.functions as f
+from pyspark.sql.types import *
+from pyspark.sql.functions import udf, sha2, col, lit, row_number, concat, count, datediff,expr,when, round,last_day,coalesce
+import datetime
+from functools import reduce
+from pyspark.sql import DataFrame
+#from datetime import datetime, timedelta
+#from datetime import *
+import pandas as pd
+#from datetime import datetime, timedelta #desabilitar para rodar em prod
+from pytz import timezone
+from dateutil.relativedelta import relativedelta
+
+
+Uso de datas:
+
+#Desabilitar em Prod
+#dt_atual = datetime.now()# usado para teste +relativedelta(days=25)
+#dt_corte = datetime(dt_atual.year, dt_atual.month, 1) + relativedelta(days=-1)
+#dat_carga = datetime.strftime(dt_corte, '%Y%m')
+
+
+#Usar para testes e reprocessamento
+dt_corte = datetime.date(2020, 3, 31)
+
+Funções de grupo:
+
+https://hendra-herviawan.github.io/pyspark-groupby-and-aggregate-functions.html
+
+group_data = df.groupBy("Company")
+group_data.agg({'Sales':'sum'}).show()
+
+teste = df_parcelas_compulsorio.groupBy("contrato")
+
+teste.agg({'dias_atraso':'max'}).filter(col('contrato')== '3806872667').show()
+
+-- simulacao de clausua having
+
+display(df.groupBy('CHAPA')\
+        .agg(f.count('CODCOLIGADA')\
+        .alias('conta'))\
+        .filter(f.col('conta') >1))
+
+
+----
+display(dfHistHor.groupBy('HOR_CODCOLIGADA','HOR_CHAPA','HOR_DTMUDANCA').agg(f.count(f.lit('1').cast('integer')).alias('NUM')).filter(f.col('NUM')>1))
+
+----
+Leitura banco de dados:
+
+xml = spark.read \
+    .format("jdbc") \
+    .option("url", "jdbc:sqlserver://10.10.20.6:1433;database=portocred_dr") \
+    .option("query", "SELECT * FROM log_workflow")\
+    .option("user", "carga") \
+    .option("password", "carga") \
+    .load()
+
+
+xml.createOrReplaceTempView("xml")
+
+
+spark.read.parquet('abfss://portocredanaliticoraw@portocredanaliticodlprd.dfs.core.windows.net/files/neurotech/carga_diaria/daily/log_'+str(grava_inicio)+'_'+str(grava_fim)).createOrReplaceTempView('log_wkfvertical_daily_vw')
+
+Existe um bug no hive ao criar table particionada, colocar tanto a coluna da tabela quanto a coluna do partition em minusculo para funcionar
+
+#criacao de intervalo de datas
+
+ultima_data = date(dt_atual.year, dt_atual.month, 1) + relativedelta(days=-32)
+from datetime import date, datetime, timedelta
+
+def geraData(inicio, fim, delta):
+    curr = inicio
+    while curr < fim:
+        yield curr
+        curr += delta
+datas_chaves = []        
+print('---> Criando intervalo de datas')
+for result in geraData(date(2020, 3, 1), ultima_data, timedelta(days=31)):
+  datas_chaves.append(datetime.strftime(result, '%Y%m'))
+print (datas_chaves)
+
+
+NO ADF se a coluna da partição do dataframe parquet estiver tb no dataframe (exemplo anomes e tb particionado pelo anomes) vai dar erro dizendo que a coluna existe duas vezes. Para resolver isso, retira-se a coluna ao gerar o dataframe, deixando somente no partitionBy. Só que aí irá gerar erro de coluna anomes nao existente. Para resolver, deve-se habilitar a procura por partição na atividade copy data em source (habilitar wildcart file path, enable partition discovery e colocar o caminho raiz da pasta do parquet onde estao as partições.
+
+
+É possivel simular uma partição caso nao seja possível usar o partitionBy  simplesmente salvando o parquet  com a pasta da partição que se quer gravar. Exemplo:
+
+  historico = ['201901','201902','201903','201904','201905','201906','201907','201908','201909','201910','201911','201912','202001','202002']
+  
+  for hist in historico:
+  
+      spark.sql("select new.sk_tipocliente, new.sk_segmentacao2, new.sk_segmentacao1,new.sk_segmentacao4,new.sk_segmentacao3, new.sk_segmentacao5,new.sk_familiaproduto, new.sk_loja, new.sk_lojista,new.sk_origemproposta, new.parceiro_h2h, new.politica_risco, new.classe_risco , new.carteira_idpdd, new.fx_atraso, new.fx_aging, new.fx_aging_ma, new.flag_pdd, new.sk_nivelderisco, new.contrato, new.dias_atraso, new.safra_inclusao_contrato, new.taxames, new.prazo,new.plano, new.saldo_contabil, new.valor_provisao, new.valor_provisao_ma, new.valor_compra, new.taxa_ponderada, new.mob, new.descricao, new.cliente, new.cpf, new.uf, new.setorempresarial, new.saldo_contabil_mob_0, new.flag_over30, new.flag_over60, new.flag_over90, new.prestacao, new.valor_contratado, new.codigo_produto, new.nivel_risco_dacasa, new.tipo_cliente_dacasa, new.prop_tipo_sistema_dacasa,'0' as flag_refin_sem_troco,'0' as caract_especial_3040,'0' as flag_novacao from inf_trustedzone.fat_carteira_credito new where anomes = "+hist)\
+      .write\
+      .mode("overwrite")\
+      .parquet('abfss://portocredanaliticorefined@portocredanaliticodlprd.dfs.core.windows.net/inf_refinedzone/fat_aging_gerencial/anomes='+hist)  
+	  
+	  Onde anomes = hist é a partição a ser criada.
+	  
+
+unix time para data normal
+
+display(f.date_format(f.from_unixtime(1541093703000/1000).cast(TimestampType()),'yyyy-MM-dd'))
+
+cast(from_unixtime(DATATRANSACAO / 1000, 'yyyy-MM-dd') as date)
+
+cast(from_unixtime(DATATRANSACAO / 1000, 'yyyy-MM-dd HH:mm:ss') as timestamp)  as DATATRANSACAO
+
+display(df.select(f.date_format(f.from_unixtime(df.DTTRANSACAO/1000).cast(TimestampType()),'yyyy-MM-dd')))
+
+subtrair dois campos hora sparksql:
+
+(unix_timestamp(ra.REC_AC_HORAACIONAMENTO)-unix_timestamp(ra.OCOR_HORAOCORRENCIA))/(60) as indic_tempo_chegada
+
+--pega um campo hora, concatena com campo data, cria dois campos data hora e subtrai a diferenca em minutos
+cast(nvl(case when rec_ac_HORATERMINO < rec_ac_HORACHEGADA then
+(unix_timestamp(to_date(date_add(ocor_DATAOCORRENCIA,1),'yyyy-mm-dd')||' '||from_unixtime(unix_timestamp(rec_ac_HORATERMINO,'yyyy-mm-dd HH:mm:ss'),'HH:mm:ss'))-unix_timestamp(to_date(ocor_DATAOCORRENCIA,'yyyy-mm-dd')||' '||from_unixtime(unix_timestamp(rec_ac_HORACHEGADA,'yyyy-mm-dd HH:mm:ss'),'HH:mm:ss')))/60
+else
+(replace(unix_timestamp(rec_ac_HORATERMINO),'null',0)-replace(unix_timestamp(rec_ac_HORACHEGADA),'null',0))/(60) end,-1) as int)
+
+
+exist e not exists nao funcionam direito no spark
+
+usar left anti join: 
+
+new_df = df_reprocessado.filter(col('partition_dt')=='2020-11-09').join(df_anterior.filter(col('partition_dt')=='2020-11-09'),on='idtransacao',how='left_anti')
+
+
+--- upsert no synapse
+
+Upsert to Azure Synapse Analytics using PySpark
+
+At the moment SQL MERGE operation is not available in Azure Synapse Analytics. However, it is possible to implement this feature using Azure Synapse Analytics connector in Databricks with some PySpark code.
+
+Upsert can be done in 2 ways
+
+    Update existing records in target that are newer in source
+    Filter out updated records from source
+    Insert just the new records.
+
+Alternatively,
+
+    Delete existing records that are older from target
+    Delete existing records from source that are older than target.
+    Insert remaining records
+
+Before we dive into code, its good to understand how Databricks Azure Synapse Analytics connector works. If you haven’t worked with this connector before its a good idea to read this post before you proceed. The connector supports basic read and write operations on Azure Synapse Analytics. It also has a preAction and postActions feature which allows execution of valid SQL statements at Synapse before or after a write operation. This is the feature I am going to use for Upserts specifically the postActions. However it comes with a catch, the pre and postActions works only on a new table. So this is how it’s done and I am using the second method for upsert
+
+    Create a temporary staging table in Azure Synapse Analytics in overwrite mode and write the input dataframe.
+    After the dataframe is written, create a postAction on the staging table to delete the records from target table that exist in the staging table and is older than the one in staging table.
+    Create a second postAction to delete the records from staging table that exist at target and is older than the one in target table.
+    At this stage create a third postAction to insert the records from staging table to target table
+
+This is how the PySpark code looks like. I created a function with these parameters
+
+    df -Input dataframe
+    dwhStagingTable – Azure Synapse Analytics Table used to stage the input dataframe for merge/upsert operation.
+    dwhTargetTable – Azure Synapse Analytics Target table where the dataframe is merged/upserted.
+    lookupColumns – pipe separated columns that uniquely defines a record in input dataframe
+    deltaName – Name of watermark column in input dataframe if any
+    dwhStagingDistributionColumn – Name of the column used as hash distribution column in staging table of DWH. This column will help improve upsert performance by minimizing data movement provided the dwhTargetTable is also hash distributed on the same column.
+
+def upsertDWH(df,dwhStagingTable,dwhTargetTable,lookupColumns,deltaName,dwhStagingDistributionColumn):
+     
+    #STEP1: Derive dynamic delete statement to delete existing record from TARGET if the source record is newer
+    lookupCols =lookupColumns.split("|")
+    whereClause=""
+    for col in lookupCols:
+      whereClause= whereClause + dwhStagingTable  +"."+ col  + "="+ dwhTargetTable +"." + col + " and "
+ 
+    if deltaName is not None and  len(deltaName) >0:
+      #Check if the last updated is greater than existing record
+      whereClause= whereClause + dwhStagingTable  +"."+ deltaName  + ">="+ dwhTargetTable +"." + deltaName
+    else:
+      #remove last "and"
+      remove="and"
+      reverse_remove=remove[::-1]
+      whereClause = whereClause[::-1].replace(reverse_remove,"",1)[::-1]
+ 
+    deleteSQL = "delete from " + dwhTargetTable + " where exists (select 1 from " + dwhStagingTable + " where " +whereClause +");"
+ 
+    #STEP2: Delete existing records but outdated records from SOURCE
+    whereClause=""
+    for col in lookupCols:
+      whereClause= whereClause + dwhTargetTable  +"."+ col  + "="+ dwhStagingTable +"." + col + " and "
+ 
+    if deltaName is not None and  len(deltaName) >0:
+      #Check if the last updated is lesser than existing record
+      whereClause= whereClause + dwhTargetTable  +"."+ deltaName  + "> "+ dwhStagingTable +"." + deltaName
+    else:
+      #remove last "and"
+      remove="and"
+      reverse_remove=remove[::-1]
+      whereClause = whereClause[::-1].replace(reverse_remove,"",1)[::-1]
+ 
+    deleteOutdatedSQL = "delete from " + dwhStagingTable + " where exists (select 1 from " + dwhTargetTable + " where " + whereClause + " );"
+    #print("deleteOutdatedSQL={}".format(deleteOutdatedSQL))
+ 
+    #STEP3: Insert SQL
+    insertSQL ="Insert Into " + dwhTargetTable + " select * from " + dwhStagingTable +";"
+    #print("insertSQL={}".format(insertSQL))
+ 
+    #consolidate post actions SQL
+    postActionsSQL = deleteSQL + deleteOutdatedSQL + insertSQL
+    print("postActionsSQL={}".format(postActionsSQL))
+ 
+    sqldwJDBC = "Your JDBC Connection String for Azure Synapse Analytics. Preferably from Key Vault"
+    tempSQLDWFolder = "A temp folder in Azure Datalake Storage or Blob Storage for temp polybase files "
+     
+     
+    #Use Hash Distribution on STG table where possible
+    if dwhStagingDistributionColumn is not None and len(dwhStagingDistributionColumn) > 0:
+      stgTableOptions ="CLUSTERED COLUMNSTORE INDEX, DISTRIBUTION = HASH (" +  dwhStagingDistributionColumn + ")"
+    else:
+      stgTableOptions ="CLUSTERED COLUMNSTORE INDEX, DISTRIBUTION = ROUND_ROBIN"
+     
+    #Upsert/Merge to Target using STG postActions
+    df.write.format("com.databricks.spark.sqldw")\
+      .option("url", sqldwJDBC).option("forwardSparkAzureStorageCredentials", "true")\
+      .option("dbTable",dwhStagingTable)\
+      .option("tableOptions",stgTableOptions)\
+      .option("tempDir",tempSQLDWFolder)\
+      .option("maxStrLength",4000)\
+      .option("postActions",postActionsSQL)\
+      .mode("overwrite").save()
+
+
+--Criacao dataframe exemplo:
+
+teste = spark.createDataFrame(
+    [
+        (1, 'foo'), # create your data here, be consistent in the types.
+        (2, 'bar'),
+    ],
+    ['id', 'txt'] # add your columns label here
+)
+
+#cria dataframe vazio
+
+df_main = spark.createDataFrame(spark.sparkContext.emptyRDD(),schema)
+
+-- Para criar via loop um data frame com varios dicionarios nao da para setar o nome do dataframe dinamicamente, melhor usar uma lista e apendar os dicionarios, depois ler a lista. Usar a key para poder identificar depois no select
+
+Ex. ler as mesmas tabelas de varios bancos diferentes e gerar uma lista com os dicionarios
+
+
+--variaveis globais de exemplo:
+
+date_str = '2019-01-01' #(datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+col_filter = 'partition_dt'
+container = 'rodovias'
+db_schema = 'dbo'
+targetTable = 'test_arrecadacao'
+writeMode = 'overwrite'
+path = '/raw/viaoeste-rodoanel/kcor/tabrecursosacionados'
+business_units = ['spvias','viaoeste-rodoanel']
+tables_kcor = ['tabprovidenciastomadas','tabrecursosacionados']
+#tables_kcor = ['tabocorrencias','tabprovidenciastomadas','tabrecursosacionados','tabveiculosenvolvidos','tauxconcessionarias','tauxgps','tauxrecursos','tauxrodovias','tauxtiposatendimentos','tauxtiposocorrencias','tauxtiposprovidencias','tauxtiposrecursos','tauxtiposveiculos']
+fragStrategy='CLUSTERED COLUMNSTORE INDEX, DISTRIBUTION = ROUND_ROBIN'
+maxStrLength='1024'
+database = 'kcor'
+
+
+def read_parquet_BUs_DB(container,database,tables, col_filter=None, value_filter=None, business_units=None):
+        df_teste = []
+        if business_units: 
+            for tab in tables:
+                 #= spark.createDataFrame(spark.sparkContext.emptyRDD(),schema)
+                print(tab)
+                for bu in business_units:
+                    df_dict = {}
+                    print(bu)
+                    path_full = f'/raw/{bu}/{database}/{tab}/'
+                    parquet_directory = path_full
+                    #trocado o indice para a tabela para poder selecionar posteriormente e criar um dataframe por tabela com todas as BU's
+                    df_dict[tab] = adls_synapse.read_parquet(container,parquet_directory, col_filter, value_filter)#df_dict[bu] 
+                    print('df_dict :'+str(df_dict))
+                    print(parquet_directory)
+                    print(container)
+                    df_teste.append(df_dict)
+                    print(df_teste)
+            #teste = 'df_'+tab
+            #print(teste)
+            
+        return df_teste
+
+
+df_dict2 = read_parquet_BUs_DB(container,database,tables_kcor,col_filter,date_str,business_units=business_units)
+
+--depois ler a lista atraves das keys onde estao os nomes das tabelas e gerar um dataframe por tabela com todas as bus (pois no dicionario, a key é a tabela e o valor sao os campos da tabela)
+
+--criar um schema
+schema = StructType([
+StructField('OCOR_DATAHORA',StringType(), True),
+])
+
+-- criar um dataframe vazio
+df_main = spark.createDataFrame(spark.sparkContext.emptyRDD(),schema)
+df_main.printSchema()
+
+--ler o dicionario e criar os dataframes 
+
+for x in df_dict:
+  df_dict_filtered = df_dict[x].select( 
+'OCOR_DATAHORA',
+'ocor_NUMOCORRENCIA'.....
+  )
+  df_main = df_main.union(df_dict_filtered)
+
+
+--unionAll esta deprecated, union no pyspark nao elimina os duplicados como no sql tem que usar distinct()
+
+df1 = df1.union(df2).distinct()
+
+--leitura e escrita passando parametros
+  df.write.mode('overwrite').parquet(f'abfss://rodovias@dlprdbigdatav2.dfs.core.windows.net/temp/{tab}-{bu}-{vcont}')
+  df1 = spark.read.parquet(f'abfss://rodovias@dlprdbigdatav2.dfs.core.windows.net/temp/{tab}-{bu}-{vcont}')
+
+
+--ERROR:
+
+org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 2661.0 failed 4 times, most recent failure: Lost task 0.3 in stage 2661.0 (TID 125363, 10.139.64.6, executor 30): java.lang.UnsupportedOperationException: org.apache.parquet.column.values.dictionary.PlainValuesDictionary$PlainBinaryDictionary
+
+CAUSE: ao ler o partition_dt, retirar usando select 
+
+data atual - 1
+
+date_add(current_date(),-1)
+
+tamanho dataframe
+
+df_transacao_efeito_ctbl.explain(mode='cost')
+
+
+'abfss://rodovias@dlprdbigdatav2.dfs.core.windows.net/raw/autoban/suat/transacao-historico'
+
+
+
+--MAIS SOBRE OTIMIZACAO DE MEMORIA
+
+What is optimization :
+
+“The term optimization refers to a process in which a system is modified in such a way that it work more efficiently or it uses fewer resources.”
+Why optimization is important:
+
+In production environment Spark is running on distributed machines, and the distributed system may be used by some other applications too. Which means the underlying resources are being utilized by different applications. The optimization is required to achieve faster execution of jobs by using optimal resources. Overutilization or underutilization of resources may create negative impact on job’s execution time and processing capacity.
+Spark in build optimizer is very efficient and this process guarantees that the Spark has optimal performance.
+But as we know different applications have different behaviors, hence based on the nature of our application and processing behaviour we need to fine tune and optimize it further.
+
+There are basically 2 main areas we should focus on –
+
+    1. Application Code level
+    2. Cluster Configuration level
+
+1. Application Code level
+
+There are lot of best practices and standards we should follow while coding our spark applications to make it more convenient in terms of execution and resource utilizations. Here I am focusing on few important standards:
+A) Partitioning :
+
+During shuffle operation spark creates 200 partitions by default. As a developer we should identify the areas where shuffle is taking place and based on the processed data volume need to define the appropriate partition numbers during that operation.
+To check existing partition on a dataframe (df):
+p = df.rdd.getNumPartitions()
+To check how data is distributed within partitions:
+print(‘distribution:’ + str(df.rdd.glom().map(len).collect()))
+
+Remember too less or too many partitions are harmful for any application.If we are confident that all shuffle operations within our application code are more or less processing same volume of data, then we can define the shuffle partition at session level:
+spark.conf.set(“spark.sql.shuffle.partitions”, “40”)
+Or else, based on the needs during the shuffle operation we can define the size by using repartition(40) or coalesce(40).
+B) Caching :
+
+Spark provides its own caching mechanism like Persist and Caching. Persist and Cache mechanisms will store the data set into the memory whenever there is requirement, where you have a small data set and that data set is being used multiple times in your program.
+
+If we apply RDD.Cache() it will always store the data in memory, and if we apply RDD.Persist() then some part of data can be stored into the memory some can be stored on the disk.
+
+But remember to avoid unnecessary caching and do not forget to unpersist cached dataframes.
+
+Spark provides its own caching mechanisms like persist() and cache().
+
+cache() and persist() will store the dataset in memory.
+
+    Cache() — Always in Memory
+    Persist() — Memory and disks
+
+C) File Format selection
+
+Spark supports many formats, such as CSV, JSON, XML, PARQUET, ORC, AVRO, etc.
+
+Spark jobs can be optimized by choosing the parquet file with snappy compression which gives the high performance and best analysis.
+
+Parquet file is native to Spark which carries the metadata along with its footer.
+
+val peopleDF=spark.read.json(“examples/src/main/resources/people.json”)
+
+peopleDF.write.parquet(“people.parquet”)
+
+val parquetFileDF = spark.read.parquet(“people.parquet”)
+D) Broadcasting :
+
+    Broadcasting plays an important role while tuning Spark jobs.
+    Broadcast variable will make small datasets available on nodes locally.
+
+val broadcastVar = sc.broadcast(Array(1, 2, 3))
+
+broadcastVar.value
+
+res0: Array[Int] = Array(1, 2, 3)
+
+    When you have one dataset which is smaller than other dataset, Broadcast join is highly recommended.
+    To use the Broadcast join:
+
+(df1. join(broadcast(df2)))
+
+Broadcasting plays an important role while tuning your spark job. Broadcast variable will make your small data set available on each node, and that node and data will be treated locally for the process.
+E) ByKey Operation
+
+    Shuffles are heavy operation which consume a lot of memory.
+    While coding in Spark, the user should always try to avoid shuffle operation.
+    High shuffling may give rise to an OutOfMemory Error; To avoid such an error, the user can increase the level of parallelism.
+    Use reduceByKey instead of groupByKey.
+
+Instead of groupBy, a user should go for the reduceByKey because groupByKey creates a lot of shuffling which hampers the performance, while reduceByKey does not shuffle the data as much. Therefore, reduceByKey is faster as compared to groupByKey. Whenever any ByKey operation is used, the user should partition the data correctly.
+
+=--Gerar calendario pyspark
+
+initial_date = datetime.strptime('2019-07-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+
+#to_day = datetime.today() - timedelta(days=0)
+
+to_day = datetime.strptime('2021-01-01', '%Y-%m-%d')
+
+date_list = [ (initial_date + timedelta(days=x)).strftime("%Y-%m-%d") for x in range(abs((initial_date - to_day).days))]
+monthList = []
+dayList = []
+refMonth = None
+index = 0
+for date in date_list:
+  index = index+1
+  if index == len(date_list):
+      dayList.append(date)
+      monthList.append(tuple(dayList))
+  elif refMonth is None or refMonth == date[:7]:
+      dayList.append(date)
+      refMonth = date[:7]
+  else:
+      monthList.append(tuple(dayList))
+      dayList = []
+      dayList.append(date)
+      refMonth = date[:7]
+
+--exemplo filtro e group by
+
+df = df_main.select('NMCONCESS','data_receita','VALOR').filter((df_main.NMCONCESS == 'rodonorte')&(df_main.data_receita == '12/01/2020')).groupBy('data_receita').sum('VALOR')#,sum('QTDETRANSACOES'))
+
+-- group by com sum e count
+dfTransacaoInterval = dfTransacaoDet.groupBy( 'SK_TEMPO','SK_UNIDADE','SK_PRACA','TURNO','SK_CATEGORIA','SK_TP_PGTO','INTERVALO').agg({'IDTRANSACAO':'count','VLPASSAGEM':'sum'})
+
+# pegar a ultima particao e filtrar
+
+max_part = dfCategoriasSPV.groupBy().agg({'dt_last_atualiz':'max'}).collect()[0][0]
+dfCategoriasSPV = dfCategoriasSPV.filter(dfCategoriasSPV.dt_last_atualiz == max_part)
+
+Formas de acessar uma coluna spark dataframe
+
+dfTransacaoDet['SK_TRANSACAO']
+dfTransacaoDet.SK_TRANSACAO
+f.col('SK_TRANSACAO') # f é o alias para a lib string functions pyspark.sql.functions
+
+                  colcoar coluna com data hora que rodou
+                     .withColumn("DATA_LEITURA_EY", current_timestamp())      
+              
+                   colocar trim em todas as colunas string
+                   fazer count nos caracteres das colunas string ou algo assim para evitar os espaços
+                   for col_name in df_master_table.columns:
+  			df_master_table = df_master_table.withColumn(col_name, trim(col(col_name)))
+
+  update delta table
+
+refined_path = "dbfs:/mnt/rodovias/refined/auditoria/{delta_table}/".format(delta_table=delta_table)
+
+try:
+  df_master_table.write.format("delta").save(refined_path)
+  spark.sql("CREATE TABLE auditoria.{delta_table} USING DELTA LOCATION '{refined_path}'".format(refined_path=refined_path, delta_table=delta_table))
+  
+  print("Create Delta table Ok -> auditoria.{delta_table}".format(delta_table=delta_table))
+except:
+  df_master_table.write.format("delta")\
+                 .option("overwriteSchema", "true")\
+                 .option("mergeSchema", "true")\
+                 .mode("overwrite")\
+                 .save(refined_path)
+  
+  print("Overwrite Delta table Ok -> auditoria.{delta_table}".format(delta_table=delta_table))
+
+
+
+limpar cache todo do catalogo
+
+spark.catalog.clearCache()
+
+sempre colcoar tabela em cache antes de fazer os sqls com ela
+
+df_master_table.cache().count()
+
+# union multiplos dataframes pyspark
+
+def unionAll(*dfs):
+    return reduce(DataFrame.unionAll, dfs)
+
+df_main = unionAll(df_main_spvias, df_main_lamvias, df_main_dutra).show()
+
+-- pivotar coluna
+
+df.groupBy("Product").pivot("Country").sum("Amount")  -- product continua na coluna e country
+pivotDF.printSchema()
+pivotDF.show(truncate=False)
+
+
+-- para melhorar a performance
+
+version 2.0 on-wards performance has been improved on Pivot, however, if you are using the lower version; note that pivot is a very expensive operation hence, it is recommended to provide column data (if known) as an argument to function as shown below.
+
+
+countries = ["USA","China","Canada","Mexico"]
+pivotDF = df.groupBy("Product").pivot("Country", countries).sum("Amount")
+pivotDF.show(truncate=False)
+
+Another approach is to do two-phase aggregation. PySpark 2.0 uses this implementation in order to improve the performance Spark-13749
+
+
+pivotDF = df.groupBy("Product","Country") \
+      .sum("Amount") \
+      .groupBy("Product") \
+      .pivot("Country") \
+      .sum("sum(Amount)") \
+pivotDF.show(truncate=False)
+
+Above two examples returns the same output but with better performance.
+
+
+https://sparkbyexamples.com/pyspark/pyspark-pivot-and-unpivot-dataframe/
+
+CAST NO WITHCOLUMN
+
+df.withColumn('NRODIASAVISO',f.col('NRODIASAVISO').cast('integer'))
+
+
+--- sort orderBy
+
+df.sort(df.age.desc()).collect()
+[Row(age=5, name='Bob'), Row(age=2, name='Alice')]
+df.sort("age", ascending=False).collect()
+[Row(age=5, name='Bob'), Row(age=2, name='Alice')]
+df.orderBy(df.age.desc()).collect()
+[Row(age=5, name='Bob'), Row(age=2, name='Alice')]
+from pyspark.sql.functions import *
+df.sort(asc("age")).collect()
+[Row(age=2, name='Alice'), Row(age=5, name='Bob')]
+df.orderBy(desc("age"), "name").collect()
+[Row(age=5, name='Bob'), Row(age=2, name='Alice')]
+df.orderBy(["age", "name"], ascending=[0, 1]).collect()
+[Row(age=5, name='Bob'), Row(age=2, name='Alice')]
+
+--isNull isNotNull
+
+from pyspark.sql.functions import col
+df.filter("state IS NOT NULL").show()
+df.filter("NOT state IS NULL").show()
+df.filter(df.state.isNotNull()).show()
+df.filter(col("state").isNotNull()).show()
+
+
+--- preencher nulos com valores anteriores da coluna
+
+import sys
+import pyspark.sql.functions as f
+df.withColumn("newout", f.last('out', True).over(Window.partitionBy('timestamp').orderBy('sequence').rowsBetween(-sys.maxsize, 0))).show()
+
+
+-- para resolver problema de duplicacao de codigo data em groupo by
+-- tira o codigo do select e coloca data (anomes) depois pega o max data
+
+df = df.groupBy('CODCOLIGADA','CHAPA',f.concat(f.year('DTMUDANCA'),f.month('DTMUDANCA')).alias('DT_ANOMES')).agg(f.max(df.DTMUDANCA).alias('DTMUDANCA'))
+
+
+-- resolver coluna ambigua - reference is ambiguous
+
+-- dropar as colunas da segunda tabela depois do join
+
+df.drop(segundatabela.campo)
+
+df = df.join(df2, (df.CODCOLIGADA == df2.CODCOLIGADA)&(df.CHAPA == df2.CHAPA)&(df.DTMUDANCA == df2.DTMUDANCA))\
+       .drop(df2.CODCOLIGADA)\
+       .drop(df2.CHAPA)\
+       .drop(df2.DTMUDANCA)
+)
+
+---trazer o mes correto com zero ao extrair mes da data com month
+
+f.date_format(fat.DATAREFERENCIA,'MM')

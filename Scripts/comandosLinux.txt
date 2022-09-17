@@ -1,0 +1,598 @@
+-- source passar uma variavael de uma arquivo para outro
+
+source ./download_files.sh $source_copy -- passa a variavel $source_copy desse arquivo para o download_files.sh
+
+exemplo completo build_run.sh para criar um container docker
+
+-----------------------------------------
+--build_run.sh
+
+#/bin/bash
+
+
+#dname=$1
+#PORT=$2
+source_copy=$3
+export source_copy
+
+source ./download_files.sh $source_copy
+
+set -x
+mkdir -p ./output
+chmod a+rw ./output
+docker build -t nifi-$1/ccr .
+docker run --rm --name nifi-$1 \
+  -p $2:$2 \
+  -v $(pwd)/output:/opt/host-output \
+  -d \
+  --log-opt max-size=30m --log-opt max-file=10 \
+  -e NIFI_WEB_HTTP_PORT=$2 \
+  nifi-$1/ccr:latest
+----------------------------------
+
+download_files.sh - arquivo que é chamado e recebe a variavel
+
+dname=$source_copy
+
+docker cp nifi-$dname:/opt/nifi/nifi-current/conf/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/database_repository/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/state/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/flowfile_repository/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/provenance_repository/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/content_repository/ .
+docker cp nifi-$dname:/opt/nifi/nifi-current/logs/ .
+
+#chmod a+rw flow.xml.gz
+#chmod a+rw nifi-flow*
+chmod a+rw -R state/
+chmod a+rw -R conf/
+chmod a+rw -R database_repository/
+chmod a+rw -R flowfile_repository/
+chmod a+rw -R provenance_repository/
+chmod a+rw -R content_repository/
+chmod a+rw -R logs/
+
+#ls -larth ls -larth flow.xml.gz nifi* state/local/
+
+--------------------------------------------------------
+
+
+-- copiar arquivos ssentre servidores linux usando scp
+
+scp /path/to/local/file remote_user@remote_host:/path/to/remote/file
+
+-instalar pacotes rpm manualmente com yum
+
+yum localinstall /path/to/file.rpm
+
+--local onde software está instalado
+
+whereis nome
+
+--ver sistema operacional
+cat /etc/*release
+
+--monitorar comandos
+
+watch -n <segundos> comando
+
+w
+--ver o que os usuarios estao fazendo
+w
+
+--localizar hierarquia processos nifi
+ps -ef | grep nifi
+ps -ef | grep <pid pai>
+
+
+--usuarios logados
+
+--Usando a opção "u" obtemos novamente as informações dos usuários logados, mas com informações de tempo ocioso e PID, aqui exemplo em conjunto com a opção anterior ficamos então com "uH":
+
+who -uH
+
+--matar sessão
+
+kill -HUP <PID>
+
+--matar todos os processos usuario ps linux
+pkill -U UID
+
+-- Este comando exibe informações sobre espaço, livre e ocupado, das partições do sistema.
+df -H 
+
+--  Exibe informações sobre o espaço usado pelos diretórios.
+du -h -d 1
+
+-- ordena 
+
+du -hs * | sort -h > /home/dallalba/uso.txt
+
+df -H /var | sort -n -r | head -n 10
+
+
+
+-- ver tamanho diretorio
+
+sudo du -sh /var
+
+sudo du -shc /var/*
+
+-- diretorios docker
+
+du -shc /var/lib/docker/*
+
+-- pegar os 5 maiores diretorios
+
+sudo du -h /var/ | sort -rh | head -5
+
+To show all of your running processes, enter:
+
+ ps -fu username
+
+-- lista processos em andamento, memoria e cpu
+htop
+
+--deletar usuarios
+-- Next, delete the user’s home directory and mail spool pass the -r option to userdel for a user named ashish, enter:
+
+ userdel -r ashish
+
+sudo -l lista as permissoes
+sudo -v
+--permissoes de root
+etc/sudoers edita se usando o visudo commo root ou sudo visudo se tiver permissao
+
+
+sudo -l lista as permissoes
+sudo -v 5min para usar sem precisar de senha
+groups usuario lista grupos
+ou less /etc/group
+
+--cria user
+useradd usuario
+adduser usuario no ubuntu
+
+--cria user mais home
+
+sudo useradd -m username
+
+--trocar senha
+
+passwd usuario
+
+-- ver opcoes do usuario
+
+useradd -D
+
+--conectar como outro usuario
+
+--criar usuario com home epecifica
+
+sudo useradd -m -d /opt/username username
+
+-- conecta como outro usuario
+su usuario
+
+--coloca o user como root no grupo wheel se existir, esse grupo deve estar configurado no arquivo /etc/sudoers
+
+sudo usermod -aG wheel usuario
+
+--lista usuarios
+
+less /etc/passwd
+
+--ver os arquivos de inicializacao do usuario bashrc, profile, etc
+
+ls -la /home/username/
+
+which mostra local do comando
+
+-- excluir diretorio nao vazio
+ rm -rf <diretorio>
+
+shel script - usados para operacionalizar quando se usa sempre os mesmos comandos
+
+env e print env mostra as variaveis de ambiente
+export crie uma variavel global e exporte-a com export
+
+env | less
+criar variavel local, so funcionam no shell atual
+variavel=valor sem espaco
+echo $variavel - mostra o valor da variavel
+export teste - torna global, dispnibilizando para outros shells 
+unset variavel - remove a variavel
+
+para usar varios comandos seguidos no scritp é so separa-los por ;
+sempre inicia com #!/bin/bash - especifica qual shell ira executar os comandos
+depois de criar o arquivo.sh deve-se dar permissao de execucao com chmod 755 por exemplo
+./nome.sh  
+echo -n mostra a linha do echo mais a proxima linha ex. echo -n 'usuário é' 
+                                                         whoami
+resultado: usuário é alexandre
+
+pode-se buscar por variavies de ambiente tb
+#!bin/bash
+echo "usuario: $USER" - a variavel vai dentro das aspas mesmos
+
+crase (backstick) permite atribuir a saida de um comando do shell para uma variavel
+
+ex dia=`date` - joga o comando date para a variavel dia
+echo "a saida é $dia"
+
+copiar listagem de diretorio para aqruivos externos sem sobrescrever a cada execucao
+#!bi/bash
+arq=`date +%d%m%y%H%M`
+ls -la /home/alexandre > log.$arq
+
+
+> sobrespcreve arquivo
+>> appenda no arquivo existente
+
+
+ps aux
+a mostra todos os processos
+x processos que nao fazem parte desse terminal
+u horario e responsavel pelo processos
+
+ps nao é dinamico, mostra fotografia do momento
+%cpu %mem cpu e memoria
+status: e running, s sleep (ativo mas nao executado), z zumbi (processo orfao, nao deve existir), t stopped, w ??, d uninterruptable sleep
+tty se o processo esta em um terminal ou nao
+ps auxwww mostra o caminho todo do processo
+top load average quantos processos estao em execucao ou na fila tem que ficat abaixo do numero de cores da maquina
+load average 5 min, 10min e 15min cada um das tres opcoes
+%cpu tempo de cpu
+top apertando o m mostra um grafico de memoria
+
+man top manual do top, pode ser usado para todos so comandos
+pr prioridade
+ni nice
+a state
+virt qto de memoria virtual esta sendo usado
+res memoria residente ram quanto esta sendo usado
+shr memoria shared
+digitar f moistra outras opcoes, ordem das colunas, etc
+
+
+Crontab
+
+crontab -e: conforme já informado, serve para editar o arquivo atual do crontab e criar um, caso não exista;
+
+crontab -l: este comando mostra o conteúdo atual do crontab;
+
+crontab -r: remove o arquivo atual do crontab.
+
+O crontab tem o seguinte formato:
+
+[minutos] [horas] [dias do mês] [mês] [dias da semana] [usuário] [comando]
+
+O preenchimento de cada campo é feito da seguinte maneira:
+
+- Minutos: informe números de 0 a 59;
+
+- Horas: informe números de 0 a 23;
+
+- Dias do mês: informe números de 0 a 31;
+
+- Mês: informe números de 1 a 12;
+
+- Dias da semana: informe números de 0 a 7;
+
+- Usuário: é o usuário que vai executar o comando (não é necessário especificá-lo se o arquivo do próprio usuário for usado);
+
+- Comando: a tarefa que deve ser executada.
+
+
+--caminho logs nifi
+var/lib/docker
+sudo tail containers/nome_container/nome_container-json.log
+
+-- criar user
+
+
+-- o vnc server é criado por usuario, entrar com o usuario e criar com o comando vncserver, colocar a senha
+listar vncservers
+vncserver -lista
+
+trocar senha vnc
+
+vncserver passwd
+
+matar vnc server
+
+vncserver -kill :1 
+
+--mudar resolucao video
+-R 
+xrandr -s 1024x768
+
+-- iniciar vncserver com opcoes de video
+
+vncserver -geometry 1600x1200 -randr 1600x1200,1440x900,1024x768
+
+copiar e renomear diretorio
+
+
+
+cp -R /tf/Custom_App /tf/Custom_App_backups/Custom_App_2017-12-21
+
+chmod recursivo
+
+chmod  -R MODE DIRECTORY
+
+chmod o+wx  (para o usuario, da permissao de escrita e execucao)
+
+Verificar quais portas nifi estão sendo utilizadas com o comando sudo lsof -i -P -n | grep docker-pr
+
+TMUX
+
+para sair sem perder as janelas
+
+ctrl+b  D
+Para listar os terminais disponiveis
+tmux ls 
+​Para acessar um terminal diposnivel
+tmux attach -t (nome)
+
+tmux new -s [session_name]
+
+
+--monitorar filessytems
+
+#/bin/bash
+# Script para monitorar utilizacao das particoes do Servidor e enviar por e-mail caso ultrapasse 90%
+
+# Remove o arquivo temporário
+rm /tmp/usohd.txt
+
+# Indica qual servidor, verifica a utilização, ordena as particoes e salva em arquivo temporario
+df -h | grep sda | sort > /root/hd/df.txt
+
+# Verifica se as particoes estao acima de 90 % e envia email com o conteudo
+while read linha
+do
+PARTICAO=`echo $linha | awk '{ print $1 }'`
+USO=`echo $linha | awk '{ print $5 }' | sed "s/%//g"`
+DIRETORIO=`echo $linha | awk '{ print $6 }'`
+if [ "$USO" -gt "89" ]; then
+echo "A particao "$PARTICAO", do diretório "$DIRETORIO" no Servidor "$HOSTNAME" esta com "$USO"% de uso! Favor verificar!!!" >> /tmp/usohd.txt
+else touch /tmp/usohd.txt
+fi
+done < /root/hd/df.txt
+
+# Envia email
+if [ ! -s /tmp/usohd.txt ] ;then
+cho "Arquivo esta vazio!"
+else
+cat /tmp/usohd.txt | mail -s '[Utilizacao do HD]' suporte@yazigi.com
+fi
+
+
+-- ler saida de comando linha a linha com comando
+
+while read -r line
+do
+   ## take some action on $line
+  echo "$line"
+done < <(ps aux)
+
+--ler um arquivo linha a linha
+
+#!/bin/bash
+input="/path/to/txt/file"
+while read -r line
+do
+  echo "$line"
+done < "$input"
+
+-- usar awk para pegar o conteudo da saida
+
+df -h | grep sda | sort > /root/hd/df.txt
+
+while read linha
+do
+PARTICAO=`echo $linha | awk '{ print $1 }'`
+USO=`echo $linha | awk '{ print $5 }' | sed "s/%//g"`
+DIRETORIO=`echo $linha | awk '{ print $6 }'`
+if [ "$USO" -gt "89" ]; then
+echo "A particao "$PARTICAO", do diretório "$DIRETORIO" no Servidor "$HOSTNAME" esta com "$USO"% de uso! Favor verificar!!!" >> /tmp/usohd.txt
+else touch /tmp/usohd.txt
+fi
+done < /root/hd/df.txt
+
+
+touch [opções] arquivo
+Descrição
+
+Este utilitário permite alterar a data e a hora do último acesso e/ou data de modificação de um arquivo.
+Algumas opções do comando
+
+    -a : altera apenas a data do útimo acesso.
+    -c, −−no-create : não cria qualquer arquivo.
+    -m : altera apenas a data de modificação do arquivo.
+    -t [[CC]YY]MMDDhhmm[.ss] : define o tempo a ser usado pelo utilitário ao invés do tempo atual.
+    −−help : exibe as opções do utilitário.
+    −−version : mostra informações sobre o arquivo.
+
+Exemplos
+
+    Se o arquivo teste não existe, o comando
+
+touch teste
+
+cria um arquivo vazio.
+
+    Para alterar as datas de modificação e de acesso do arquivo teste para 12:31 do dia 01/05 do ano corrente, digite
+
+touch -t 05011231 teste
+
+    Para atualizar as datas de todos os arquivos do diretório corrente, digite
+
+touch *
+Observações
+
+    Se as opções não especificarem qual data deve ser alterada, o utilitário altera as duas datas do arquivo: acesso e modificação.
+
+trocar senha cntlm 
+
+localizacao do arquivo /data/tools
+
+[31/03 10:28] Waner de Oliveira Miranda
+    
+cntlm -u 30-01252@ENGELOGTEC -H 
+​[31/03 10:28] Waner de Oliveira Miranda
+    
+gera os hashs 
+​[31/03 10:28] Waner de Oliveira Miranda
+    
+cntlm.conf 
+​[31/03 10:28] Waner de Oliveira Miranda
+    
+tá no meu user 30-01354 
+​[31/03 10:30] Waner de Oliveira Miranda
+    
+ cntlm -c cntlm.conf  -v
+
+-- testar conexao via curl
+
+curl -x http://172.17.0.1:3128 http://www.google.com
+
+
+-- arvore mounts
+
+sudo lsblk
+
+BoEc316-4
+
+--colocar para copiar o flow xml de hora em hora
+
+sudo watch  -n 3600 docker cp nifi-lamvias-kcor-20210818:/opt/nifi/nifi-current/conf/flow.xml.gz .
+
+
+################### CNTLM.CONF EXEMPLO ################################
+
+#
+# Cntlm Authentication Proxy Configuration
+#
+# NOTE: all values are parsed literally, do NOT escape spaces,
+# do not quote. Use 0600 perms if you use plaintext password.
+#
+
+
+#Username    30-01252
+Username    nifiazure    
+Domain        ENGELOGTEC
+Auth            NTLMv2    
+# NOTE: Use plaintext password only at your own risk
+# Use hashes instead. You can use a "cntlm -M" and "cntlm -H"
+# command sequence to get the right config for your environment.
+# See cntlm man page
+# Example secure config shown below.
+
+#PassLM          29494C2B05DF356DFBE4CFD0ACB05FA8
+#PassNT          D4E4BBA73B989724A7F716C236F9A343
+#PassNTLMv2      37D67A0D34457B18BE39FB05679463D8    # Only for user '30-01354', domain 'ENGELOGTEC'
+
+
+PassLM          8771EEB3B53427D94F2C99D4681412A7
+PassNT          1E1590980DE4B32648F3986FA3FFB40B
+PassNTLMv2      BD6A215B84AC3FED380A0E568E120473  # User# Only for user 'nifiazure', domain 'ENGELOGTEC'
+
+
+
+#PassLM          64D59C1FCF2D29212EA0FD6B2FC42B96
+#PassNT          D52E37DDAA03A87FC425E33B87F27A0D
+#PassNTLMv2      7A15C0202F5EF48D15F3B9360ECD7A6A    # Only for user '30-01252', domain 'ENGELOGTECH'
+
+#PssLM          64D59C1FCF2D2921E90C858D92C0F533
+#PassNT          6DA5D81E9FA6781157245DCEBE503EC5
+#PassNTLMv2      98AE3833380B675A975209AE2D9813DE    # Only for user '30-01252', domain 'ENGELOGTEC'
+
+
+# Specify the netbios hostname cntlm will send to the parent
+# proxies. Normally the value is auto-guessed.
+#
+# Workstation    netbios_hostname
+
+
+# List of parent proxies to use. More proxies can be defined
+# one per line in format <proxy_ip>:<proxy_port>
+#
+#Proxy        10.101.77.30:8083
+Proxy        10.101.77.31:80
+Proxy        10.101.77.32:80
+
+
+# List addresses you do not want to pass to parent proxies
+# * and ? wildcards can be used
+#
+NoProxy        localhost, 127.0.0.*, 10.*, 192.168.*
+
+
+# Specify the port cntlm will listen on
+# You can bind cntlm to specific interface by specifying
+# the appropriate IP address also in format <local_ip>:<local_port>
+# Cntlm listens on 127.0.0.1:3128 by default
+#
+Listen  172.17.0.1:3128
+Listen	127.0.0.1:3128
+
+
+# If you wish to use the SOCKS5 proxy feature as well, uncomment
+# the following option. It can be used several times
+# to have SOCKS5 on more than one port or on different network
+# interfaces (specify explicit source address for that).
+#
+# WARNING: The service accepts all requests, unless you use
+# SOCKS5User and make authentication mandatory. SOCKS5User
+# can be used repeatedly for a whole bunch of individual accounts.
+#
+#SOCKS5Proxy    8010
+#SOCKS5User    dave:password
+
+
+# Use -M first to detect the best NTLM settings for your proxy.
+# Default is to use the only secure hash, NTLMv2, but it is not
+# as available as the older stuff.
+#
+# This example is the most universal setup known to man, but it
+# uses the weakest hash ever. I won't have it's usage on my
+# conscience. :) Really, try -M first.
+#
+#Auth        LM
+#Flags        0x06820000
+
+
+# Enable to allow access from other computers
+#
+#Gateway    yes
+
+
+# Useful in Gateway mode to allow/restrict certain IPs
+# Specifiy individual IPs or subnets one rule per line.
+#
+#Allow        127.0.0.1
+#Deny        0/0
+
+
+# GFI WebMonitor-handling plugin parameters, disabled by default
+#
+#ISAScannerSize     1024
+#ISAScannerAgent    Wget/
+#ISAScannerAgent    APT-HTTP/
+#ISAScannerAgent    Yum/
+
+
+# Headers which should be replaced if present in the request
+#
+#Header        User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)
+
+
+# Tunnels mapping local port to a machine behind the proxy.
+# The format is <local_port>:<remote_host>:<remote_port>
+# 
+#Tunnel        11443:remote.com:443
+
+################################ CTNLM.CONF FIM #####################################################
+
