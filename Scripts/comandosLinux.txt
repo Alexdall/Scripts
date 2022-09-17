@@ -438,19 +438,14 @@ trocar senha cntlm
 
 localizacao do arquivo /data/tools
 
-[31/03 10:28] Waner de Oliveira Miranda
     
 cntlm -u 30-01252@ENGELOGTEC -H 
-​[31/03 10:28] Waner de Oliveira Miranda
     
 gera os hashs 
-​[31/03 10:28] Waner de Oliveira Miranda
     
 cntlm.conf 
-​[31/03 10:28] Waner de Oliveira Miranda
     
 tá no meu user 30-01354 
-​[31/03 10:30] Waner de Oliveira Miranda
     
  cntlm -c cntlm.conf  -v
 
