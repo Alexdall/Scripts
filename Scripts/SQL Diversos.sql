@@ -23711,6 +23711,7 @@ verificar tb se nao existe nenhum campo com tipos de dados diferentes que pode m
 
 
 -- select em delta tables no adls gen2
+
 SELECT
     codigo,tipocodigo, count(1)
 FROM
