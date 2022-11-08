@@ -1,4 +1,4 @@
----- testes para trazer o tipo de solicitação e para validacao dos dados que irao para a fato_recursos_humanos
+---- testes para trazer o tipo de solicitaï¿½ï¿½o e para validacao dos dados que irao para a fato_recursos_humanos
 
 
 -- consulta para trazer quem saiu e quem solicitou   - select no select e select no from
@@ -10,7 +10,7 @@
    and a.TPRE_COD = c.cod
    and a.cod = e.reqi_cod
    and  remp_chapa_subs ='2017310'
-   and c.descricao = upper('SUBSTITUIÇÃO')
+   and c.descricao = upper('SUBSTITUIï¿½ï¿½O')
 --  order by a.hor_dt_ini_vig desc
 
 union
@@ -23,14 +23,14 @@ union
    and a.cod = e.reqi_cod
    and solicitante.numero = a.remp_chapa
    and  remp_chapa_subs ='2017310'
-   and c.descricao = upper('SUBSTITUIÇÃO')
+   and c.descricao = upper('SUBSTITUIï¿½ï¿½O')
   --order by a.hor_dt_ini_vig desc
 
 
                       
                     
                     
--- REQUISIÇÕES  -- PARA SABER O TIPO DA REQUISIÇÃO  
+-- REQUISIï¿½ï¿½ES  -- PARA SABER O TIPO DA REQUISIï¿½ï¿½O  
                                          
 select A.COD,
        c.descricao,       
@@ -62,7 +62,7 @@ where remp_chapa =   '2017560'
    and a.TPRE_COD = c.cod
    and a.cod = e.reqi_cod
    and  remp_chapa_subs ='2017310'
-   and c.descricao = upper('SUBSTITUIÇÃO')
+   and c.descricao = upper('SUBSTITUIï¿½ï¿½O')
   order by a.hor_dt_ini_vig desc
 
 -- busca matricula e nome do funcionario
@@ -232,8 +232,8 @@ select * from dda_rh.SITUACOES_FUNCIONAIS t
 
 select * from dda_rh.reg_afastamentos where rsit_remp_chapa = 175706
 
--- ligacao da situação funcional com o funcionario para chegar na fat_recursos_humanos
--- esta trazendo mais de 54 linhas para o user 175706 que é o que tem na fato.
+-- ligacao da situaï¿½ï¿½o funcional com o funcionario para chegar na fat_recursos_humanos
+-- esta trazendo mais de 54 linhas para o user 175706 que ï¿½ o que tem na fato.
 select count(*) from (
 select *--rsit_remp_chapa,rsit_sfun_cod 
 from dda_rh.reg_afastamentos raf, dda_rh.pessoas_fisicas pf, dda_rh.SITUACOES_FUNCIONAIS t, fat_recursos_humanos rh
@@ -400,7 +400,7 @@ select * from dda_rh.eventos where cod in (840,883,863,938)
 
 -- designacoes para avaliacao de onde a pessoa esta lotada, independente do cargo atual
 -- traz o cargo real
--- teoricamente nao precisa construir dimensao pois as informações estao na dim_cargos, seria somente levar o registro da dda_designacoes para a fato e criar a fk.
+-- teoricamente nao precisa construir dimensao pois as informaï¿½ï¿½es estao na dim_cargos, seria somente levar o registro da dda_designacoes para a fato e criar a fk.
 select * from dda_rh.reg_designacoes rd,dda_rh.pessoas_fisicas pf, dda_rh.cargos ca
 where  rd.remp_chapa = pf.numero
 --and   nome_completo like 'LUCIANA%CEOLIN'--'JULIANO%COLOMBO'
@@ -411,7 +411,7 @@ order by DT_INI_VIG desc
 
 
 
--- query para encontrar Número de empregados extra quadro -  21 contra 22 do relatorio
+-- query para encontrar Nï¿½mero de empregados extra quadro -  21 contra 22 do relatorio
 
 select * from dda_rh.reg_designacoes rd,dda_rh.pessoas_fisicas pf, dda_rh.cargos ca
 where  rd.remp_chapa = pf.numero
@@ -436,7 +436,7 @@ where remp_chapa = 175331--28422
 
 select * from dda_rh.cargos where cod = 9506--9511
 
--- verificar se é esse trecho da package de recursos humanos que popula o cargao atual de acordo coma data
+-- verificar se ï¿½ esse trecho da package de recursos humanos que popula o cargao atual de acordo coma data
 Select MAX(u.dt_mov)
                 From dda_rh.reg_cargos u
                Where u.remp_chapa = emprg.chapa
@@ -763,8 +763,8 @@ SELECT UNID_ORGANIZ.UORG_COD / 100,
    AND (REG_SALARIOS.MMOV_COD = 1)
    AND (REG_CARGOS.MMOV_COD = 1 AND CARGOS.EMP_COD = REG_EMPREGOS.EMP_COD)
    AND (REG_UNIORGS.MMOV_COD = 1 AND UNID_ORGANIZ.EMP_COD IN ((1)))
-   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-2015')--BETWEEN :"data inicio admissão" AND
-   --    :"data fim admissão")
+   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-2015')--BETWEEN :"data inicio admissï¿½o" AND
+   --    :"data fim admissï¿½o")
    AND CHAPA = 265209
    and dr.tpre_cod = dt.cod
    and dr.remp_chapa_subs = PF.numero
@@ -878,8 +878,8 @@ SELECT UNID_ORGANIZ.UORG_COD / 100,
    AND (REG_SALARIOS.MMOV_COD = 1)
    AND (REG_CARGOS.MMOV_COD = 1 AND CARGOS.EMP_COD = REG_EMPREGOS.EMP_COD)
    AND (REG_UNIORGS.MMOV_COD = 1 AND UNID_ORGANIZ.EMP_COD IN ((1)))
-   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-2015')--BETWEEN :"data inicio admissão" AND
-   --    :"data fim admissão")
+   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-2015')--BETWEEN :"data inicio admissï¿½o" AND
+   --    :"data fim admissï¿½o")
    AND CHAPA = 265209
    and dr.tpre_cod = dt.cod
    and dr.remp_chapa_subs = PF.numero
@@ -919,7 +919,7 @@ SELECT UNID_ORGANIZ.UORG_COD / 100,
           (TO_NUMBER(TO_CHAR(REG_EMPREGOS.DT_ADMISSAO, 'MM')))*/
  ORDER BY REG_EMPREGOS.CHAPA ASC
  
- ---carga da dimensão com SCD2
+ ---carga da dimensï¿½o com SCD2
  
 select count(*) into v_vazio from DIM_TIPOS_REQUISICOES;
 if v_vazio = 0 then
@@ -989,7 +989,7 @@ insert (P.ID,P.COD, P.DESCRICAO, P.DT_INI_VIGENCIA, P.DT_FIM_VIGENCIA)
  
  -- query flag admitidos por substituicao Kazuko OK, so colocar na fato
 
-Select 'Admissão' tipo_mov,                     
+Select 'Admissï¿½o' tipo_mov,                     
                u.remp_chapa remp_chapa,                     
                u.dt_mov dt_mov ,
                decode(chapa, null, 'N','S') FLG_SUBSTITUICAO    
@@ -1037,7 +1037,7 @@ SELECT
    AND (REG_SALARIOS.MMOV_COD = 1)
    AND (REG_CARGOS.MMOV_COD = 1 AND CARGOS.EMP_COD = REG_EMPREGOS.EMP_COD)
  --  AND (REG_UNIORGS.MMOV_COD = 1 AND UNID_ORGANIZ.EMP_COD IN ((1)))
-   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-1900')--BETWEEN :"data inicio admissão" AND
+   AND (REG_EMPREGOS.DT_RESCISAO >= '01-01-1900')--BETWEEN :"data inicio admissï¿½o" AND
 
    AND UNI.DT_MOV IN
        (SELECT MAX(HH.DT_MOV)
@@ -1091,7 +1091,7 @@ From   dda_rh.reg_empregos emprg,
        DDA_BI.dim_tempo dt,             
        DDA_BI.dim_centros_resp_lotacao dcr,             
        grupos_pessoas gps,             
-       (Select 'Admissão' tipo_mov,                     
+       (Select 'Admissï¿½o' tipo_mov,                     
                u.remp_chapa remp_chapa,                     
                u.dt_mov dt_mov                
         From dda_rh.reg_uniorgs u               
@@ -1102,8 +1102,8 @@ From   dda_rh.reg_empregos emprg,
    
         --              
         Union              
-        -- Movimentação Interna              
-        Select 'Mov. Interna Admissão' tipo_mov,                     
+        -- Movimentaï¿½ï¿½o Interna              
+        Select 'Mov. Interna Admissï¿½o' tipo_mov,                     
                u.remp_chapa remp_chapa,                     
                u.dt_mov dt_mov                
         From dda_rh.reg_uniorgs u               
@@ -1248,12 +1248,12 @@ where menor.cod_cargo = maior.cod_cargo
 -- verificar a questao da dim motivos absenteismo na fato recursos humanos, ver se vai se comportar corretamente de acordo com os registros da fato
 
 -- fato recursos humanos so registra dados dos funcionarios ainda ativos
--- para cada movimento do rh é gerada uma linha na fato, ou seja, demissao tb gera uma linha e o num_pessoas recebe 1.
+-- para cada movimento do rh ï¿½ gerada uma linha na fato, ou seja, demissao tb gera uma linha e o num_pessoas recebe 1.
 -- Logo, somente para essa linha que devo colocar o motivo da demissao. procurar no codigo da package o dql e inlcuir a regra e o campo
 -- A fato gera uma linha para admissao, 1 para demissao, uma para torca de funcao e 1 por mes para contagem dos func.
--- para movimentacao 6 (alocacao) é gerada linha mas nao conta, ou seja, valor zero
--- movimentacao 5 é o total de funcionarios, linha de cada mes, 3- entrada, 1-saida e 4 e 2 - entrada e saida mov interna respect.
--- Estou achando que é melhor criar uma flag de demissao voluntaria S ou N e colocar na linha de demissao.
+-- para movimentacao 6 (alocacao) ï¿½ gerada linha mas nao conta, ou seja, valor zero
+-- movimentacao 5 ï¿½ o total de funcionarios, linha de cada mes, 3- entrada, 1-saida e 4 e 2 - entrada e saida mov interna respect.
+-- Estou achando que ï¿½ melhor criar uma flag de demissao voluntaria S ou N e colocar na linha de demissao.
 -- Nao tem sentido levar toda a dimensao visto que a fato gera linhas por movimento e esses movimentos nao contemplam todas
 -- as linhas da dimensao. 
 
@@ -1274,7 +1274,7 @@ where menor.cod_cargo = maior.cod_cargo
 
 --42300
    select distinct Dprod_id, count(*) from(
-   Select 'Total Funcionários' Tipo,
+   Select 'Total Funcionï¿½rios' Tipo,
              '-' Tipo_2,
              emprg.chapa Dprod_Id,
              nvl(dcarg.id, 0) Dcarg_Id,
@@ -1377,7 +1377,7 @@ order by dprod_id
 -- fazer a ligacao da dim_motivos_desligamentos nesse trecho
 
       select count(*) from (
-      Select 'Saída' TIPO,
+      Select 'Saï¿½da' TIPO,
              uniorg2.tipo_mov TIPO_MOV,
              emprg.chapa CHAPA,
              nvl(dcarg.id, -1) DCAR_ID,
@@ -1402,7 +1402,7 @@ order by dprod_id
              dim_tempo dt,
            --  dda_rh.tipos_desligamentos rtd,
            --  dim_motivos_desligamentos dmd,
-             (Select 'Mov. Interna Saída' tipo_mov,
+             (Select 'Mov. Interna Saï¿½da' tipo_mov,
                      u.remp_chapa chapa,
                      u.uorg_cod uorg_cod,
                      u.dt_mov dt_mov,
@@ -1434,7 +1434,7 @@ order by dprod_id
               --
               Union
               
-               Select 'Rescisão' tipo_mov,
+               Select 'Rescisï¿½o' tipo_mov,
                      uni.remp_chapa chapa,
                      uni.uorg_cod uorg_cod,
                      e.dt_rescisao dt_mov,
@@ -1460,7 +1460,7 @@ order by dprod_id
                            --  lpad(p_ano, 4, 0) || lpad(pc_mes, 2, 0)
                          and u3.remp_chapa = e.chapa)
               --
-            /*  Select 'Rescisão' tipo_mov,
+            /*  Select 'Rescisï¿½o' tipo_mov,
                      uni.remp_chapa chapa,
                      uni.uorg_cod uorg_cod,
                      e.dt_rescisao dt_mov,
@@ -1506,7 +1506,7 @@ order by dprod_id
                  
                  
 -- codigo para ligar a dimensao de situacoes funcionais na fato RH
--- vai ser necessário fazer update na fato para inserir esses valores
+-- vai ser necessï¿½rio fazer update na fato para inserir esses valores
 
 CREATE OR REPLACE PROCEDURE INS_RH2_PRC IS
 
@@ -1611,7 +1611,7 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
                                                                    and   to_char(dt_ini_vig,'yyyymm')<= c.dt_id
                                                                    and   dt_fim_vig is null)))ini_desig, b.dt_fim_vig as fim_desig
    from dda_rh.reg_afastamentos a, dda_rh.reg_designacoes b,
-   (Select  'Total Funcionários' Tipo,
+   (Select  'Total Funcionï¿½rios' Tipo,
              --FRH.DTPMOV_ID,
              '-' Tipo_2,
              emprg.chapa Dpro_Id,
@@ -1706,7 +1706,7 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
              dim_tempo dt,
              dim_centros_resp_lotacao dcr,
              grupos_pessoas gps,
-             (Select 'Admissão' tipo_mov,
+             (Select 'Admissï¿½o' tipo_mov,
                      u.remp_chapa remp_chapa,
                      u.dt_mov dt_mov
                 From dda_rh.reg_uniorgs u
@@ -1717,8 +1717,8 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
                        and u.mmov_cod = 1  
               --
               Union
-              -- Movimentação Interna
-              Select 'Mov. Interna Admissão' tipo_mov,
+              -- Movimentaï¿½ï¿½o Interna
+              Select 'Mov. Interna Admissï¿½o' tipo_mov,
                      u.remp_chapa remp_chapa,
                      u.dt_mov dt_mov
                 From dda_rh.reg_uniorgs u
@@ -1769,7 +1769,7 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
       Union
       --
    --   select count(*) from (
-      Select 'Saída' TIPO,
+      Select 'Saï¿½da' TIPO,
            --  NULL,
              uniorg2.tipo_mov TIPO_MOV,
              emprg.chapa CHAPA,
@@ -1793,7 +1793,7 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
              dim_centros_resp_lotacao dcr,
              grupos_pessoas gps,
              dim_tempo dt,
-             (Select 'Mov. Interna Saída' tipo_mov,
+             (Select 'Mov. Interna Saï¿½da' tipo_mov,
                      u.remp_chapa chapa,
                      u.uorg_cod uorg_cod,
                      u.dt_mov dt_mov
@@ -1821,7 +1821,7 @@ select distinct rh.dtpmov_id,rh.dpro_id, rh.dt_id, RA.DT_INI_VIG, RA.DT_FIM_VIG,
               --
               Union
               --
-              Select 'Rescisão' tipo_mov,
+              Select 'Rescisï¿½o' tipo_mov,
                      uni.remp_chapa chapa,
                      uni.uorg_cod uorg_cod,
                      e.dt_rescisao dt_mov
@@ -2349,7 +2349,7 @@ select a.username,a.sid, a.serial#, a.status, a.schemaname, a.program, a.osuser,
     where a.sql_address=b.address
     --and a.username='stefanini.dallalba';
     
--- identifica os motivos de movimentação---------------------------
+-- identifica os motivos de movimentaï¿½ï¿½o---------------------------
 
 select m.descr, c.*
   from dda_rh.reg_cargos c
@@ -2378,7 +2378,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
   Procedure Fat_Recursos_Humanos_Prc(p_ano In Number, p_mes In Number) Is
 
  Cursor c_tmp_rh(pc_mes Number) Is
-   Select 'Total Funcionários'               Tipo,
+   Select 'Total Funcionï¿½rios'               Tipo,
                '-'                          Tipo_2,
                chapa                        Dprod_Id,
                nvl(dcarg.id, 0)             Dcarg_Id,
@@ -2496,7 +2496,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                         )
                  group by remp_chapa) adic,
                     
-   ---------------- Traz as faixas salarias e cálculos de salários para o relatório da Estrutura Remuneratória --
+   ---------------- Traz as faixas salarias e cï¿½lculos de salï¿½rios para o relatï¿½rio da Estrutura Remuneratï¿½ria --
    -------------------------------------------------------------------------------------------------------------- 
                           
                  (
@@ -2508,8 +2508,8 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                maior_faixa_sal,
                salario
           from 
-   ---------------- Traz os salários acrescidos dos eventos e cargas horárias do funcionário ---------
-   ---------------- Cálculo baseado nas definições da Kazuko ----------------------------------------------------
+   ---------------- Traz os salï¿½rios acrescidos dos eventos e cargas horï¿½rias do funcionï¿½rio ---------
+   ---------------- Cï¿½lculo baseado nas definiï¿½ï¿½es da Kazuko ----------------------------------------------------
           
           (select carg_desig.remp_chapa,
                        nvl(busca_designados(carg_desig.remp_chapa), car_cod) car_cod,
@@ -2569,7 +2569,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                                                                 
                                 union
         --------- traz uma linha por chapa, somados os valores de acordo com os eventos ---
-        --------- Após multiplica pela carga horária do cargo -----------------------------
+        --------- Apï¿½s multiplica pela carga horï¿½ria do cargo -----------------------------
         
                                 select '1',
                                        mc.remp_chapa,
@@ -2637,7 +2637,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                                 end,
                                 2)) salarios
                                 
-              --------- Traz as faixas salariais mínimas e máximas dos cargos --------- 
+              --------- Traz as faixas salariais mï¿½nimas e mï¿½ximas dos cargos --------- 
               ,
                (select menor.nome,
                        menor.cod_cargo,
@@ -2819,15 +2819,15 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                dim_centros_resp_lotacao dcr,
                grupos_pessoas           gps,
                
-   -------------- Traz os Admitidos por Substituição - Flag_Substituição ----------------------
+   -------------- Traz os Admitidos por Substituiï¿½ï¿½o - Flag_Substituiï¿½ï¿½o ----------------------
    
-               (Select 'Admissão' tipo_mov,
+               (Select 'Admissï¿½o' tipo_mov,
                        u.remp_chapa remp_chapa,
                        u.dt_mov dt_mov,
                        decode(chapa, NULL, 'N', 'S') FLAG_SUBSTITUICAO
                   From dda_rh.reg_uniorgs u,
    
-   --------------- Query vinda do Discoverer para identificar os Admitidos por Substituição --- 
+   --------------- Query vinda do Discoverer para identificar os Admitidos por Substituiï¿½ï¿½o --- 
                       
                        (select distinct chapa
                           from (SELECT REG_EMPREGOS.CHAPA as chapa
@@ -2915,8 +2915,8 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                 
                 --
                 Union
-                -- Movimentação Interna
-                Select 'Mov. Interna Admissão' tipo_mov,
+                -- Movimentaï¿½ï¿½o Interna
+                Select 'Mov. Interna Admissï¿½o' tipo_mov,
                        u.remp_chapa remp_chapa,
                        u.dt_mov dt_mov,
                        '0'
@@ -2968,7 +2968,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
         --
         Union
         --
-        Select 'Saída' TIPO,
+        Select 'Saï¿½da' TIPO,
                uniorg2.tipo_mov TIPO_MOV,
                emprg.chapa CHAPA,
                nvl(dcarg.id, -1) DCAR_ID,
@@ -2998,7 +2998,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                dim_centros_resp_lotacao dcr,
                grupos_pessoas gps,
                dim_tempo dt,
-               (Select 'Mov. Interna Saída' tipo_mov,
+               (Select 'Mov. Interna Saï¿½da' tipo_mov,
                        u.remp_chapa chapa,
                        u.uorg_cod uorg_cod,
                        u.dt_mov dt_mov,
@@ -3031,7 +3031,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                 
   ------------ Traz os Motivos de Desligamentos e Faltas ---------------------------------------
   
-                Select 'Rescisão' tipo_mov,
+                Select 'Rescisï¿½o' tipo_mov,
                        uni.remp_chapa chapa,
                        uni.uorg_cod uorg_cod,
                        e.dt_rescisao dt_mov,
@@ -3158,7 +3158,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     --
 
 
-    -- Busca a alocação da folha de pagamento
+    -- Busca a alocaï¿½ï¿½o da folha de pagamento
     Cursor c_alocacao_folha Is
       Select 6
            , frh.dpro_id
@@ -3192,7 +3192,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
            , dda_bi.dim_tempo                 dt
            , dda.centros_de_custo             cct
        Where frh.num_pessoas                  = 1
-      --   and grch.remp_emp_cod                != 1 -- Não esta levando o SESI, ainda não foi validado
+      --   and grch.remp_emp_cod                != 1 -- Nï¿½o esta levando o SESI, ainda nï¿½o foi validado
          and grch.dt_atualizacao              = prch.grch_dt_atualizacao
          and grch.remp_chapa                  = prch.grch_remp_chapa
          and grch.remp_emp_cod                = prch.grch_remp_emp_cod
@@ -3221,11 +3221,11 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
 
 -- tratamento com regexp oracle
      Select regexp_replace(regexp_replace(regexp_replace('024 sadas DFGDGDG asd88 234 S/:N 456','[A-Z a-z]|\/',''),'[:punct:]',''),'[:space:]','') from dual
-     nvl(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(JOIN_A.NUMERO,'[A-Z a-z]|\/',''),'-',''),'[:punct:]',''),'[:space:]',''),'[:cntrl:]',''),'°',''),'º',''),',',''),'''',''),0)  NUMERO,
+     nvl(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(JOIN_A.NUMERO,'[A-Z a-z]|\/',''),'-',''),'[:punct:]',''),'[:space:]',''),'[:cntrl:]',''),'ï¿½',''),'ï¿½',''),',',''),'''',''),0)  NUMERO,
 
 
     --
-    -- Profissionais sem alocação, inclui 100% no CC de lotação
+    -- Profissionais sem alocaï¿½ï¿½o, inclui 100% no CC de lotaï¿½ï¿½o
     Cursor c_sem_alocacao Is
       Select 6
            , f.dpro_id
@@ -3263,7 +3263,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                              Group by ff.dpro_id
                           Having count(*) >= 1)
          And f.dtpmov_id = 5
-       --  And f.demp_id != 2 -- Não esta levando o SESI, ainda não foi validado
+       --  And f.demp_id != 2 -- Nï¿½o esta levando o SESI, ainda nï¿½o foi validado
          And f.dt_id = dt.id
          And dt.ano = lpad(p_ano, 4, 0);
     --
@@ -3272,7 +3272,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     ---
 
 
-      -- Cursor que remove a alocação duplicada de funcionários que estão lotados em 2 cc
+      -- Cursor que remove a alocaï¿½ï¿½o duplicada de funcionï¿½rios que estï¿½o lotados em 2 cc
   Cursor c_remove_prof_duplicados Is
     select count(*) count
          , f.horas
@@ -3612,7 +3612,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     Using (Select Distinct Tipo Tipo_Mov_1, Tipo_2 Tipo_Mov_2
              From Fat_RH_Tmp
            Union
-           Select 'Alocação' Tipo_Mov_1, 'Alocação' Tipo_Mov_2
+           Select 'Alocaï¿½ï¿½o' Tipo_Mov_1, 'Alocaï¿½ï¿½o' Tipo_Mov_2
              from dual  ) ftpmov
     On (dtpmov.Tipo_Mov_2 = ftpmov.Tipo_Mov_2)
     When Matched Then
@@ -3690,14 +3690,14 @@ End Bi_RH_Pck;
 
 
 
---<<<<<<<<<<<<<<<<<<<<<<<<<< Package FAT_RH Última Versão >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+--<<<<<<<<<<<<<<<<<<<<<<<<<< Package FAT_RH ï¿½ltima Versï¿½o >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 CREATE OR REPLACE Package Body Bi_RH_Pck Is
   --
   Procedure Fat_Recursos_Humanos_Prc(p_ano In Number, p_mes In Number) Is
 
  Cursor c_tmp_rh(pc_mes Number) Is
-   Select 'Total Funcionários'               Tipo,
+   Select 'Total Funcionï¿½rios'               Tipo,
                '-'                          Tipo_2,
                chapa                        Dprod_Id,
                nvl(dcarg.id, 0)             Dcarg_Id,
@@ -3815,7 +3815,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                         )
                  group by remp_chapa) adic,
                     
-   ---------------- Traz as faixas salarias e cálculos de salários para o relatório da Estrutura Remuneratória --
+   ---------------- Traz as faixas salarias e cï¿½lculos de salï¿½rios para o relatï¿½rio da Estrutura Remuneratï¿½ria --
    -------------------------------------------------------------------------------------------------------------- 
                           
                  (
@@ -3827,8 +3827,8 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                maior_faixa_sal,
                salario
           from 
-   ---------------- Traz os salários acrescidos dos eventos e cargas horárias do funcionário ---------
-   ---------------- Cálculo baseado nas definições da Kazuko ----------------------------------------------------
+   ---------------- Traz os salï¿½rios acrescidos dos eventos e cargas horï¿½rias do funcionï¿½rio ---------
+   ---------------- Cï¿½lculo baseado nas definiï¿½ï¿½es da Kazuko ----------------------------------------------------
           
           (select carg_desig.remp_chapa,
                        nvl(busca_designados(carg_desig.remp_chapa), car_cod) car_cod,
@@ -3888,7 +3888,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                                                                 
                                 union
         --------- traz uma linha por chapa, somados os valores de acordo com os eventos ---
-        --------- Após multiplica pela carga horária do cargo -----------------------------
+        --------- Apï¿½s multiplica pela carga horï¿½ria do cargo -----------------------------
         
                                 select '1',
                                        mc.remp_chapa,
@@ -3956,7 +3956,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                                 end,
                                 2)) salarios
                                 
-              --------- Traz as faixas salariais mínimas e máximas dos cargos --------- 
+              --------- Traz as faixas salariais mï¿½nimas e mï¿½ximas dos cargos --------- 
               ,
                (select menor.nome,
                        menor.cod_cargo,
@@ -4141,15 +4141,15 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                dim_centros_resp_lotacao dcr,
                grupos_pessoas           gps,
                
-   -------------- Traz os Admitidos por Substituição - Flag_Substituição ----------------------
+   -------------- Traz os Admitidos por Substituiï¿½ï¿½o - Flag_Substituiï¿½ï¿½o ----------------------
    
-               (Select 'Admissão' tipo_mov,
+               (Select 'Admissï¿½o' tipo_mov,
                        u.remp_chapa remp_chapa,
                        u.dt_mov dt_mov,
                        decode(chapa, NULL, 'N', 'S') Flag_Substituicao
                   From dda_rh.reg_uniorgs u,
    
-   --------------- Query vinda do Discoverer para identificar os Admitidos por Substituição --- 
+   --------------- Query vinda do Discoverer para identificar os Admitidos por Substituiï¿½ï¿½o --- 
                       
                        (select distinct chapa
                           from (SELECT REG_EMPREGOS.CHAPA as chapa
@@ -4237,8 +4237,8 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                 
                 --
                 Union
-                -- Movimentação Interna
-                Select 'Mov. Interna Admissão' tipo_mov,
+                -- Movimentaï¿½ï¿½o Interna
+                Select 'Mov. Interna Admissï¿½o' tipo_mov,
                        u.remp_chapa remp_chapa,
                        u.dt_mov dt_mov,
                        '0'
@@ -4290,7 +4290,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
         --
         Union
         --
-        Select 'Saída' TIPO,
+        Select 'Saï¿½da' TIPO,
                uniorg2.tipo_mov TIPO_MOV,
                emprg.chapa CHAPA,
                nvl(dcarg.id, -1) DCAR_ID,
@@ -4321,7 +4321,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                dim_centros_resp_lotacao dcr,
                grupos_pessoas gps,
                dim_tempo dt,
-               (Select 'Mov. Interna Saída' tipo_mov,
+               (Select 'Mov. Interna Saï¿½da' tipo_mov,
                        u.remp_chapa chapa,
                        u.uorg_cod uorg_cod,
                        u.dt_mov dt_mov,
@@ -4354,7 +4354,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                 
   ------------ Traz os Motivos de Desligamentos e Faltas ---------------------------------------
   
-                Select 'Rescisão' tipo_mov,
+                Select 'Rescisï¿½o' tipo_mov,
                        uni.remp_chapa chapa,
                        uni.uorg_cod uorg_cod,
                        e.dt_rescisao dt_mov,
@@ -4482,7 +4482,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     --
 
 
-    -- Busca a alocação da folha de pagamento
+    -- Busca a alocaï¿½ï¿½o da folha de pagamento
     Cursor c_alocacao_folha Is
       Select 6
            , frh.dpro_id
@@ -4517,7 +4517,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
            , dda_bi.dim_tempo                 dt
            , dda.centros_de_custo             cct
        Where frh.num_pessoas                  = 1
-      --   and grch.remp_emp_cod                != 1 -- Não esta levando o SESI, ainda não foi validado
+      --   and grch.remp_emp_cod                != 1 -- Nï¿½o esta levando o SESI, ainda nï¿½o foi validado
          and grch.dt_atualizacao              = prch.grch_dt_atualizacao
          and grch.remp_chapa                  = prch.grch_remp_chapa
          and grch.remp_emp_cod                = prch.grch_remp_emp_cod
@@ -4546,7 +4546,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
 
 
     --
-    -- Profissionais sem alocação, inclui 100% no CC de lotação
+    -- Profissionais sem alocaï¿½ï¿½o, inclui 100% no CC de lotaï¿½ï¿½o
     Cursor c_sem_alocacao Is
       Select 6
            , f.dpro_id
@@ -4585,7 +4585,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
                              Group by ff.dpro_id
                           Having count(*) >= 1)
          And f.dtpmov_id = 5
-       --  And f.demp_id != 2 -- Não esta levando o SESI, ainda não foi validado
+       --  And f.demp_id != 2 -- Nï¿½o esta levando o SESI, ainda nï¿½o foi validado
          And f.dt_id = dt.id
          And dt.ano = lpad(p_ano, 4, 0);
     --
@@ -4594,7 +4594,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     ---
 
 
-      -- Cursor que remove a alocação duplicada de funcionários que estão lotados em 2 cc
+      -- Cursor que remove a alocaï¿½ï¿½o duplicada de funcionï¿½rios que estï¿½o lotados em 2 cc
   Cursor c_remove_prof_duplicados Is
     select count(*) count
          , f.horas
@@ -4938,7 +4938,7 @@ CREATE OR REPLACE Package Body Bi_RH_Pck Is
     Using (Select Distinct Tipo Tipo_Mov_1, Tipo_2 Tipo_Mov_2
              From Fat_RH_Tmp
            Union
-           Select 'Alocação' Tipo_Mov_1, 'Alocação' Tipo_Mov_2
+           Select 'Alocaï¿½ï¿½o' Tipo_Mov_1, 'Alocaï¿½ï¿½o' Tipo_Mov_2
              from dual  ) ftpmov
     On (dtpmov.Tipo_Mov_2 = ftpmov.Tipo_Mov_2)
     When Matched Then
@@ -5020,7 +5020,7 @@ End Bi_RH_Pck;
 
 --- CONSULTA ALTERADA E PRODUCAO PARA RESOLVER PROBLEMA DOS QUE NAO ESTAVAM VINDO -------
 --- AGORA TROUXE MAS EM PRODUCAO VIERAM ALGUNS CARGOS A MENOS POR EXEMPLO, 9518 ----
----1324 Senai OK com produção -----
+---1324 Senai OK com produï¿½ï¿½o -----
 
 --select count(*) from (
 select remp_chapa, car_cod, faixas.nome, menor_sal, maior_sal, vlr_final
@@ -5261,7 +5261,7 @@ select remp_chapa, car_cod, faixas.nome, menor_sal, maior_sal, vlr_final
 --) where vlr_final > maior_sal
 
 
---- consultas de validação dos dados carregados estrutura remuneratoria
+--- consultas de validaï¿½ï¿½o dos dados carregados estrutura remuneratoria
 --faixas e cargos
 select /*distinct*/ dpro_id,descricao, ddesig_cod, /*cod,*/ a.demp_id, /*b.emp_cod,*/ menor_faixa_sal, maior_faixa_sal  
 from dda_bi.fat_recursos_humanos a, dda_bi.dim_cargos b 
@@ -5362,7 +5362,7 @@ select b.pfi_matricula gestor, f.dt_id, b.dt_inicio, b.dt_fim, f.dpro_id func,b.
 
 select Demp_Id, Dt_Id,Dprod_Id, dcargo.cod, menor_faixa_sal,maior_faixa_sal, salario 
  from (
- Select distinct --'Total Funcionários' Tipo,
+ Select distinct --'Total Funcionï¿½rios' Tipo,
            --  '-' Tipo_2,
              chapa Dprod_Id,
              nvl(dcarg.id, 0) Dcarg_Id,
@@ -5418,11 +5418,11 @@ select Demp_Id, Dt_Id,Dprod_Id, dcargo.cod, menor_faixa_sal,maior_faixa_sal, sal
              
              dda_bi.fat_rh_adicionais_tmp adic,
              
-             ---------------- Traz as faixas salarias e cálculos de salários para o relatório da Estrutura Remuneratória --
+             ---------------- Traz as faixas salarias e cï¿½lculos de salï¿½rios para o relatï¿½rio da Estrutura Remuneratï¿½ria --
              -------------------------------------------------------------------------------------------------------------- 
              
              dda_bi.fat_rh_fxsal_tmp FxSal,
-             ---------------- Traz a situação funcional dos colaboradores
+             ---------------- Traz a situaï¿½ï¿½o funcional dos colaboradores
                                    (select a.rsit_remp_chapa, b.id dsitfunc_id
                                      from dda_rh.reg_afastamentos a, dda_bi.dim_situacoes_funcionais b
                                      where a.rsit_sfun_cod = b.cod
@@ -6662,7 +6662,7 @@ select dpro.matricula                  matricula
                where dtrh.id                         = frh.dtpmov_id
                  and dpro.id                         = frh.dpro_id
                  and dmdes.id                        = frh.dmotdesl_id
-                 and dtrh.id                         = 1 --rescisão
+                 and dtrh.id                         = 1 --rescisï¿½o
                  and frh.dpro_id = 202592
                  and dmdes.flag_atual = 'S' ---------> flag 's'
  
@@ -6768,13 +6768,13 @@ SELECT 'ECL' TIPO,
               'ED',
               'Em Desenvolvimento',
               'EXC',
-              'Excluído',
+              'Excluï¿½do',
               'ENC',
               'Encerrado',
               'EV',
               'Evadido',
               'NAP',
-              'Não Apto',
+              'Nï¿½o Apto',
               'REP',
               'Reprovado',
               'REM',
@@ -6810,7 +6810,7 @@ SELECT 'ECL' TIPO,
                                                TURN.TERCEIRO_TURNO || ' ' ||
                                                TURN.TURNO_ALTERNATIVO,
                                                '1',
-                                               'Manhã'),
+                                               'Manhï¿½'),
                                        '2',
                                        'Tarde'),
                                '3',
@@ -7280,13 +7280,13 @@ Begin
                 'ed',
                 'em desenvolvimento',
                 'exc',
-                'excluído',
+                'excluï¿½do',
                 'enc',
                 'encerrado',
                 'ev',
                 'evadido',
                 'nap',
-                'não apto',
+                'nï¿½o apto',
                 'rep',
                 'reprovado',
                 'rem',
@@ -7320,7 +7320,7 @@ Begin
                                                  turn.terceiro_turno || ' ' ||
                                                  turn.turno_alternativo,
                                                  '1',
-                                                 'manhã'),
+                                                 'manhï¿½'),
                                          '2',
                                          'tarde'),
                                  '3',
@@ -7405,16 +7405,16 @@ Begin
            else
             '-'
          end as regra_data,
-         case --quando for ensino infantil ei código 20, mantem o inscrito (i)
+         case --quando for ensino infantil ei cï¿½digo 20, mantem o inscrito (i)
            when curs.mepr_id = 20 and alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            when curs.mepr_id <> 20 and
                 alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr', 'i') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            else
-            'situações não contabilizadas para realizado matrícula'
+            'situaï¿½ï¿½es nï¿½o contabilizadas para realizado matrï¿½cula'
          end regra_sit_aluno,
          case
            when alun.data_matricula between ddt.data_ini and ddt.data_fim then
@@ -7473,9 +7473,9 @@ Begin
             cca.bairro is not null and cca.mun_codigo is not null and
             (cca.telefone_residencial is not null or
             cca.telefone_celular is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_1,
 
          case
@@ -7487,9 +7487,9 @@ Begin
                 cca.fone_cobr is not null or
                 cca.fone_comercial is not null or
                 cca.telefone_recado is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_2,*/
 
          case
@@ -7508,9 +7508,9 @@ Begin
             cca.telefone_responsavel is not null or
             cca.tel_empresa_mae is not null or
             cca.tel_empresa_pai is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_3
 
   -- select count(cca.id || alun.id), count(distinct cca.id || alun.id)
@@ -7727,13 +7727,13 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
                 'ed',
                 'em desenvolvimento',
                 'exc',
-                'excluído',
+                'excluï¿½do',
                 'enc',
                 'encerrado',
                 'ev',
                 'evadido',
                 'nap',
-                'não apto',
+                'nï¿½o apto',
                 'rep',
                 'reprovado',
                 'rem',
@@ -7767,7 +7767,7 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
                                                  turn.terceiro_turno || ' ' ||
                                                  turn.turno_alternativo,
                                                  '1',
-                                                 'manhã'),
+                                                 'manhï¿½'),
                                          '2',
                                          'tarde'),
                                  '3',
@@ -7852,16 +7852,16 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
            else
             '-'
          end as regra_data,
-         case --quando for ensino infantil ei código 20, mantem o inscrito (i)
+         case --quando for ensino infantil ei cï¿½digo 20, mantem o inscrito (i)
            when curs.mepr_id = 20 and alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            when curs.mepr_id <> 20 and
                 alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr', 'i') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            else
-            'situações não contabilizadas para realizado matrícula'
+            'situaï¿½ï¿½es nï¿½o contabilizadas para realizado matrï¿½cula'
          end regra_sit_aluno,
          case
            when alun.data_matricula between ddt.data_ini and ddt.data_fim then
@@ -7920,9 +7920,9 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
             cca.bairro is not null and cca.mun_codigo is not null and
             (cca.telefone_residencial is not null or
             cca.telefone_celular is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_1,
 
          case
@@ -7934,9 +7934,9 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
                 cca.fone_cobr is not null or
                 cca.fone_comercial is not null or
                 cca.telefone_recado is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_2,*/
 
          case
@@ -7955,9 +7955,9 @@ cursor c_carga_ods (p_dt_ini date, p_dt_fim date) is
             cca.telefone_responsavel is not null or
             cca.tel_empresa_mae is not null or
             cca.tel_empresa_pai is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_3
 
   -- select count(cca.id || alun.id), count(distinct cca.id || alun.id)
@@ -8470,13 +8470,13 @@ select --null, --sysdate data_carga,
                 'ed',
                 'em desenvolvimento',
                 'exc',
-                'excluído',
+                'excluï¿½do',
                 'enc',
                 'encerrado',
                 'ev',
                 'evadido',
                 'nap',
-                'não apto',
+                'nï¿½o apto',
                 'rep',
                 'reprovado',
                 'rem',
@@ -8510,7 +8510,7 @@ select --null, --sysdate data_carga,
                                                  terceiro_turno || ' ' ||
                                                  turno_alternativo,
                                                  '1',
-                                                 'manhã'),
+                                                 'manhï¿½'),
                                          '2',
                                          'tarde'),
                                  '3',
@@ -8595,16 +8595,16 @@ select --null, --sysdate data_carga,
            else
             '-'
          end as regra_data,
-         case --quando for ensino infantil ei código 20, mantem o inscrito (i)
+         case --quando for ensino infantil ei cï¿½digo 20, mantem o inscrito (i)
            when mepr_id = 20 and situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            when mepr_id <> 20 and
                 situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr', 'i') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            else
-            'situações não contabilizadas para realizado matrícula'
+            'situaï¿½ï¿½es nï¿½o contabilizadas para realizado matrï¿½cula'
          end regra_sit_aluno,
          case
            when data_matricula between data_ini and data_fim then
@@ -8663,9 +8663,9 @@ select --null, --sysdate data_carga,
             cca.bairro is not null and cca.mun_codigo is not null and
             (cca.telefone_residencial is not null or
             cca.telefone_celular is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_1,
 
          case
@@ -8677,9 +8677,9 @@ select --null, --sysdate data_carga,
                 cca.fone_cobr is not null or
                 cca.fone_comercial is not null or
                 cca.telefone_recado is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_2,*/
 
          case
@@ -8699,9 +8699,9 @@ select --null, --sysdate data_carga,
             tel_empresa_mae is not null or
             tel_empresa_pai is not null
             ))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_3
 
   -- select count(cca.id || alun.id), count(distinct cca.id || alun.id)
@@ -8724,10 +8724,10 @@ select --null, --sysdate data_carga,
  -- retirada a tabela dim_tempo do subselect que recebia os parametros de data (between) e colocado
  -- fora do join. Criado um select anterior e populada as datas em um loop que sao passadas para a query
  -- dinamicamente (bind) dentro do loop.
- -- Apos é feito um insert com com todas as transformações na tabela final
+ -- Apos ï¿½ feito um insert com com todas as transformaï¿½ï¿½es na tabela final
  -- Qq transformacao no select gera temp de todo o codigo, no caso, estava sendo feito join com tabelas
- -- de 3 owners distintos e com muitas transformações, o que estourava a temporaria.
- -- sysdate no select também gera e temporario de todo o codigo.
+ -- de 3 owners distintos e com muitas transformaï¿½ï¿½es, o que estourava a temporaria.
+ -- sysdate no select tambï¿½m gera e temporario de todo o codigo.
  
  
  
@@ -8786,7 +8786,7 @@ and scmodisc.DISC_UNID_GPS_CODIGO = sdisc.UNID_GPS_CODIGO
 -------------------- validacao educ_audit online obiee ------------------------------------
 
 -- aparentemente dados ok de acordo com regras
--- duplicacao de linhas pela dim_data será feita dentro do obiee
+-- duplicacao de linhas pela dim_data serï¿½ feita dentro do obiee
 
 ----- query de validacao da view
 
@@ -8909,13 +8909,13 @@ select sysdate data_carga,
                 'ed',
                 'em desenvolvimento',
                 'exc',
-                'excluído',
+                'excluï¿½do',
                 'enc',
                 'encerrado',
                 'ev',
                 'evadido',
                 'nap',
-                'não apto',
+                'nï¿½o apto',
                 'rep',
                 'reprovado',
                 'rem',
@@ -8949,7 +8949,7 @@ select sysdate data_carga,
                                                  turn.terceiro_turno || ' ' ||
                                                  turn.turno_alternativo,
                                                  '1',
-                                                 'manhã'),
+                                                 'manhï¿½'),
                                          '2',
                                          'tarde'),
                                  '3',
@@ -9051,16 +9051,16 @@ select sysdate data_carga,
 
 
 
-         case --quando for ensino infantil ei código 20, mantem o inscrito (i)
+         case --quando for ensino infantil ei cï¿½digo 20, mantem o inscrito (i)
            when curs.mepr_id = 20 and alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            when curs.mepr_id <> 20 and
                 alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr', 'i') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            else
-            'situações não contabilizadas para realizado matrícula'
+            'situaï¿½ï¿½es nï¿½o contabilizadas para realizado matrï¿½cula'
          end regra_sit_aluno,
 --2
 
@@ -9129,9 +9129,9 @@ select sysdate data_carga,
             cca.bairro is not null and cca.mun_codigo is not null and
             (cca.telefone_residencial is not null or
             cca.telefone_celular is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_1,
 
          case
@@ -9143,9 +9143,9 @@ select sysdate data_carga,
                 cca.fone_cobr is not null or
                 cca.fone_comercial is not null or
                 cca.telefone_recado is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_2,*/
 
          case
@@ -9164,9 +9164,9 @@ select sysdate data_carga,
             cca.telefone_responsavel is not null or
             cca.tel_empresa_mae is not null or
             cca.tel_empresa_pai is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_3
 
   -- select count(cca.id || alun.id), count(distinct cca.id || alun.id)
@@ -9395,13 +9395,13 @@ select --*
                 'ed',
                 'em desenvolvimento',
                 'exc',
-                'excluído',
+                'excluï¿½do',
                 'enc',
                 'encerrado',
                 'ev',
                 'evadido',
                 'nap',
-                'não apto',
+                'nï¿½o apto',
                 'rep',
                 'reprovado',
                 'rem',
@@ -9435,7 +9435,7 @@ select --*
                                                  turn.terceiro_turno || ' ' ||
                                                  turn.turno_alternativo,
                                                  '1',
-                                                 'manhã'),
+                                                 'manhï¿½'),
                                          '2',
                                          'tarde'),
                                  '3',
@@ -9532,16 +9532,16 @@ select --*
          end as regra_data2,
          
        -----------------------------------------------------------------------------------  
-         case --quando for ensino infantil ei código 20, mantem o inscrito (i)
+         case --quando for ensino infantil ei cï¿½digo 20, mantem o inscrito (i)
            when curs.mepr_id = 20 and alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            when curs.mepr_id <> 20 and
                 alun.situacao_saida_aluno not in
                 ('des', 'exc', 'tri', 'rem', 'tr', 'i') then
-            'somente situações válidas'
+            'somente situaï¿½ï¿½es vï¿½lidas'
            else
-            'situações não contabilizadas para realizado matrícula'
+            'situaï¿½ï¿½es nï¿½o contabilizadas para realizado matrï¿½cula'
          end regra_sit_aluno,
          
          case
@@ -9602,9 +9602,9 @@ select --*
             cca.bairro is not null and cca.mun_codigo is not null and
             (cca.telefone_residencial is not null or
             cca.telefone_celular is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_1,
 
          case
@@ -9616,9 +9616,9 @@ select --*
                 cca.fone_cobr is not null or
                 cca.fone_comercial is not null or
                 cca.telefone_recado is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_2,*/
 
          case
@@ -9637,9 +9637,9 @@ select --*
             cca.telefone_responsavel is not null or
             cca.tel_empresa_mae is not null or
             cca.tel_empresa_pai is not null))) then
-            'rastreável'
+            'rastreï¿½vel'
            else
-            'não rastreável'
+            'nï¿½o rastreï¿½vel'
          end regra_rastreavel_3
 
   -- select count(cca.id || alun.id), count(distinct cca.id || alun.id)
@@ -9735,10 +9735,10 @@ order by regra_data2 desc
 
 
 --===== ESTUDOS DE CASOS DEMISSAO =============
--- verficar o erro ENCONTRADO MUITOS REGISTROS PARA O BENFICIARIO : MARLON SOARES DA SILVA NA EMPRESA: 1 . ERRO : ORA-01422: a extração exata retorna mais do que o número solicitado de linhas
+-- verficar o erro ENCONTRADO MUITOS REGISTROS PARA O BENFICIARIO : MARLON SOARES DA SILVA NA EMPRESA: 1 . ERRO : ORA-01422: a extraï¿½ï¿½o exata retorna mais do que o nï¿½mero solicitado de linhas
 
          
--- encontra as informações do Marlos Soares da Silva 
+-- encontra as informaï¿½ï¿½es do Marlos Soares da Silva 
 --cbeneficiarios aqui eu pego os beneficiarios, mas tb encontra os dependentes?
  Select id,
            emp_cod,
@@ -9897,7 +9897,7 @@ Select id,
          And familia_rsaude Is Not Null;    
              
            
- -- consulta com as alterações da relacao_pessoas
+ -- consulta com as alteraï¿½ï¿½es da relacao_pessoas
  
  
  select *
@@ -9961,7 +9961,7 @@ order by matricula) teste
          And familia_rsaude Is Not Null;  
          
          
---================ caso Enio Stalhoefer  -- verificando por que ficou com status ativo e não processou
+--================ caso Enio Stalhoefer  -- verificando por que ficou com status ativo e nï¿½o processou
 
 --cbeneficiarios_dep    
 --   traz as 3 linhas dos dependentes
@@ -10042,7 +10042,7 @@ Select id,
          And familia_rsaude Is Not Null;    
              
            
- -- consulta com as alterações da relacao_pessoas
+ -- consulta com as alteraï¿½ï¿½es da relacao_pessoas
  
  
  select *
@@ -10464,7 +10464,7 @@ on scmodisc.DISC_ID = sdisc.ID
 and scmodisc.DISC_UNID_ID = sdisc.UNID_ID
 and scmodisc.DISC_UNID_GPS_CODIGO = sdisc.UNID_GPS_CODIGO 
 
-and siscur.titulo like '%EJA MÉDIO%'
+and siscur.titulo like '%EJA Mï¿½DIO%'
 order by 1, 3 , 5,6, 8
 
 
@@ -10521,7 +10521,7 @@ on scmodisc.DISC_ID = sdisc.ID
 and scmodisc.DISC_UNID_ID = sdisc.UNID_ID
 and scmodisc.DISC_UNID_GPS_CODIGO = sdisc.UNID_GPS_CODIGO */
 
---and siscur.titulo like '%EJA MÉDIO%'
+--and siscur.titulo like '%EJA Mï¿½DIO%'
 order by 3
 
 
@@ -10611,11 +10611,11 @@ select * from dim_turmas where id = 452032
 
 select * from UNI_MENSAGENS_PROCESSAMENTO order by 8 desc
 
--- 54 rescisoes em dezembro até 08/12
+-- 54 rescisoes em dezembro atï¿½ 08/12
 select * from dda_rh.reg_empregos where to_char(dt_rescisao,'mmyyyy') = '122017'
 order by chapa
 
--- 32 admissoes em dezembro até 08/12
+-- 32 admissoes em dezembro atï¿½ 08/12
 select * from dda_rh.reg_empregos where to_char(dt_admissao,'mmyyyy') = '122017'
 order by chapa
 
@@ -10711,7 +10711,7 @@ order by matricula
 
 
 
--- reprocessamento da estrutura de relações pessoas
+-- reprocessamento da estrutura de relaï¿½ï¿½es pessoas
 
 DELETE FROM rsa_relacao_rsaude WHERE ID IN (211257)
 
@@ -10814,7 +10814,7 @@ UPDATE dda_rh.UNI_BENEFICIARIO_GERADO SET STATUS = 'A' where STATUS = 'P' and OP
          AND BEN.REMP_EMP_COD = R.EMP_COD
          AND BEN.REMP_CHAPA = R.CHAPA
          AND BEN.DT_INI_VIG IS NOT NULL
-         AND (BEN.DT_FIM_VIG > to_date('30/11/2017','dd/mm/yyyy') OR -- ver se é data final mesmo
+         AND (BEN.DT_FIM_VIG > to_date('30/11/2017','dd/mm/yyyy') OR -- ver se ï¿½ data final mesmo
              BEN.DT_FIM_VIG IS NULL)
          AND BEN.BENE_COD IN (15, 16)
          AND R.EMP_COD = RUNI.REMP_EMP_COD
@@ -11011,26 +11011,26 @@ select * from fat_educacao
 --- levar necessidade_especial para a fato_educacao
 
 select */*distinct dcurm_id, count(*)*/ from (   
-   Select scal.Cca_Id        DALU_ID -- Utilizado para chamar a função em memória para chegar no aluno.
+   Select scal.Cca_Id        DALU_ID -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no aluno.
             ,
-             scal.cca_unid_id   DCLI_ID -- Utilizado para chamar a função em memória para chegar no aluno. Valor é zero para o SENAI
+             scal.cca_unid_id   DCLI_ID -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no aluno. Valor ï¿½ zero para o SENAI
             ,
-             a.pcmo_cect_codigo DCR_ID -- Utilizado para chamar função em memória
+             a.pcmo_cect_codigo DCR_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria
             ,
-             curs.id            DCURM_ID -- Utilizado para chamar função em memória para chegar no curso
+             curs.id            DCURM_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria para chegar no curso
             ,
              4                  DEMP_ID,
-             curs.unid_id       DRAST_ID -- Utilizado para chamar função em memória para chegar no curso
+             curs.unid_id       DRAST_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria para chegar no curso
             ,
              0                  DSIAL_ID
              /*, scop.turm_id*/,
              (select t.turm_id
                 from dda_sis.SIS_SCOP_PRODUCAO t
                where t.scal_id = a.scal_id
-                 and rownum = 1) DTURM_ID -- Utilizado para chamar função em memória para chegar na turma
+                 and rownum = 1) DTURM_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria para chegar na turma
             ,
              dt.id DT_ID,
-             a.pcmo_cect_codigo DUORG_ID -- Utilizado para chamar função em memória
+             a.pcmo_cect_codigo DUORG_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria
             ,
              0 PREVISTO_AH,
              0 PREVISTO_MATRICULA,
@@ -11051,7 +11051,7 @@ select */*distinct dcurm_id, count(*)*/ from (
              '01/jan/1901' DATA_INGRESSO,
              0 IDADE,
              '01/jan/1901' DATA_INI_SIT_ALUN,
-             curs.titulo MOTIVO_CANCELAMENTO -- Utilizado para chamar a função em memória para chegar no curso. No SENAI esse valor é nulo.
+             curs.titulo MOTIVO_CANCELAMENTO -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no curso. No SENAI esse valor ï¿½ nulo.
             ,
              '-' CLIENTELA_SESI,
              '-' ISENTO,
@@ -11076,8 +11076,8 @@ select */*distinct dcurm_id, count(*)*/ from (
              0 VALOR_EFETIVO_ANO_MES_ANT,
              0 DTPMA_ID,
              0 DTPCL_ID,
-             'Não' CR_LOT,
-             'Não' IND_PROD,
+             'Nï¿½o' CR_LOT,
+             'Nï¿½o' IND_PROD,
              0 PREVISTO_HH,
              0 PREVISTO_ATENDIMENTO,
              0 REALIZADO_HH,
@@ -11092,8 +11092,8 @@ select */*distinct dcurm_id, count(*)*/ from (
              0 REALIZADO_AT_ANO_MES_ANT,
              0 DST_ID,
              0 DCGS_ID,
-             'Não' IND_ATEND,
-             'Não' IND_DN,
+             'Nï¿½o' IND_ATEND,
+             'Nï¿½o' IND_DN,
              0 DPLA_ID,
              '-' CHAVE,
              '-' CHAVE_BSC,
@@ -11186,21 +11186,21 @@ select */*distinct dcurm_id, count(*)*/ from (
 
       Union All
 
-      Select ingr.Cca_Id DALU_ID -- Utilizado para chamar a função em memória para chegar no aluno.
+      Select ingr.Cca_Id DALU_ID -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no aluno.
             ,
-             ingr.cca_unid_id DCLI_ID -- Utilizado para chamar a função em memória para chegar no aluno. Valor é zero para o SENAI
+             ingr.cca_unid_id DCLI_ID -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no aluno. Valor ï¿½ zero para o SENAI
             ,
-             a.pcmo_cect_codigo DCR_ID -- Utilizado para chamar função em memória
+             a.pcmo_cect_codigo DCR_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria
             ,
-             curf_id DCURM_ID -- Utilizado para chamar função em memória para chegar no curso
+             curf_id DCURM_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria para chegar no curso
             ,
              4 DEMP_ID,
-             44 DRAST_ID -- Utilizado para chamar função em memória para chegar no curso
+             44 DRAST_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria para chegar no curso
             ,
              0 DSIAL_ID,
              0 DTURM_ID,
              dt.id DT_ID,
-             a.pcmo_cect_codigo DUORG_ID -- Utilizado para chamar função em memória
+             a.pcmo_cect_codigo DUORG_ID -- Utilizado para chamar funï¿½ï¿½o em memï¿½ria
             ,
              0 PREVISTO_AH,
              0 PREVISTO_MATRICULA,
@@ -11221,7 +11221,7 @@ select */*distinct dcurm_id, count(*)*/ from (
              '01/jan/1901' DATA_INGRESSO,
              0 IDADE,
              '01/jan/1901' DATA_INI_SIT_ALUN,
-             curf.titulo MOTIVO_CANCELAMENTO -- Utilizado para chamar a função em memória para chegar no curso. No SENAI esse valor é nulo.
+             curf.titulo MOTIVO_CANCELAMENTO -- Utilizado para chamar a funï¿½ï¿½o em memï¿½ria para chegar no curso. No SENAI esse valor ï¿½ nulo.
             ,
              '-' CLIENTELA_SESI,
              '-' ISENTO,
@@ -11246,8 +11246,8 @@ select */*distinct dcurm_id, count(*)*/ from (
              0 VALOR_EFETIVO_ANO_MES_ANT,
              0 DTPMA_ID,
              0 DTPCL_ID,
-             'Não' CR_LOT,
-             'Não' IND_PROD,
+             'Nï¿½o' CR_LOT,
+             'Nï¿½o' IND_PROD,
              0 PREVISTO_HH,
              0 PREVISTO_ATENDIMENTO,
              0 REALIZADO_HH,
@@ -11262,8 +11262,8 @@ select */*distinct dcurm_id, count(*)*/ from (
              0 REALIZADO_AT_ANO_MES_ANT,
              0 DST_ID,
              0 DCGS_ID,
-             'Não' IND_ATEND,
-             'Não' IND_DN,
+             'Nï¿½o' IND_ATEND,
+             'Nï¿½o' IND_DN,
              0 DPLA_ID,
              '-' CHAVE,
              '-' CHAVE_BSC,
@@ -11351,7 +11351,7 @@ select */*distinct dcurm_id, count(*)*/ from (
          and curf.aat_codigo = aat.codigo(+)
          
          
-        -- (1-Presencial, 2-Móvel, 3-A distância) --UTILIZAR A FLAG "EAD" da tela de curso      --(Select  Decode(Curs.Ead, 'N', '1', 'S', '2')-- || ' - ' || curs.codigo_sae
+        -- (1-Presencial, 2-Mï¿½vel, 3-A distï¿½ncia) --UTILIZAR A FLAG "EAD" da tela de curso      --(Select  Decode(Curs.Ead, 'N', '1', 'S', '2')-- || ' - ' || curs.codigo_sae
               From   Sis_Cursos         Curs
                     ,Sis_Cursos_Modulos Curm
               Where  Curm.Curs_Id = Curs.Id
@@ -11363,39 +11363,39 @@ select */*distinct dcurm_id, count(*)*/ from (
              ) Curs_EAD
      
     
--- identificação dos cargos baseados no SAB
+-- identificaï¿½ï¿½o dos cargos baseados no SAB
 -- GECON
 
 --select distinct processo from (
 select univ.*, sab.* ,  (case when setor = 205  then 
                                                      (case when cod_proc = 16 then
-                                                                            (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                            (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                   when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                  when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                  when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                   when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                              else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 38 then
-                                                                              (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                              (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                     when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                    when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                    when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                     when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                                else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 40 then
-                                                                               (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                               (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                      when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                     when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                     when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                      when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                                 else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 66  then
-                                                                               (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                               (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                      when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                     when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                     when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                      when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                                 else desc_cargo end)
                                                            
@@ -11501,7 +11501,7 @@ select gps.desc_pastas_ecm empresa,
 
  
 -- select * from dda.srs_funcionario_rh where descricao_setor = 'GECON' descricao_uo like '%CONTROLAD%'
---)case when cod_proc = 24 then(case when car.nome like '%TÉCNICO%' then 'TECNICO'
+--)case when cod_proc = 24 then(case when car.nome like '%Tï¿½CNICO%' then 'TECNICO'
                                                                              
 
 ---- GEDUC
@@ -11510,32 +11510,32 @@ select gps.desc_pastas_ecm empresa,
 --select distinct processo from (
 select univ.*, sab.* ,  (case when setor = 23  then 
                                                      (case when cod_proc = 16 then
-                                                                            (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                            (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                   when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                  when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                  when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                   when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                              else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 24 then
                                                                               (case when desc_cargo like '%ASSISTENTE%'    then 'ASSISTENTE'
-                                                                                    when desc_cargo like '%TÉCNICO%'       then 'TECNICO' 
-                                                                                    when desc_cargo like '%BIBLIOTECÁRIO%' then 'BIBLIOTECARIO'
+                                                                                    when desc_cargo like '%Tï¿½CNICO%'       then 'TECNICO' 
+                                                                                    when desc_cargo like '%BIBLIOTECï¿½RIO%' then 'BIBLIOTECARIO'
                                                                                else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 52 then
-                                                                               (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                               (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                      when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                     when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                     when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                      when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                                 else desc_cargo end)
                                                            
                                                       
                                                            when cod_proc = 53  then
-                                                                               (case when desc_cargo like '%ANALISTA%JÚNIOR%'    then 'ANALISTA JR'
+                                                                               (case when desc_cargo like '%ANALISTA%Jï¿½NIOR%'    then 'ANALISTA JR'
                                                                                      when desc_cargo like 'ANALISTA%PLENO'       then 'ANALISTA PL'
-                                                                                     when desc_cargo like 'ANALISTA%SÊNIOR'      then 'ANALISTA SR' 
+                                                                                     when desc_cargo like 'ANALISTA%Sï¿½NIOR'      then 'ANALISTA SR' 
                                                                                      when desc_cargo like '%ASSISTENTE%'         then 'ASSISTENTE'
                                                                                 else desc_cargo end)
                                                            
@@ -11640,7 +11640,7 @@ select gps.desc_pastas_ecm empresa,
 
  
 -- select * from dda.srs_funcionario_rh where descricao_setor = 'GECON' descricao_uo like '%CONTROLAD%'
---)case when cod_proc = 24 then(case when car.nome like '%TÉCNICO%' then 'TECNICO'
+--)case when cod_proc = 24 then(case when car.nome like '%Tï¿½CNICO%' then 'TECNICO'
 
 
 --------------------------------------------------------------------------------------                                                                              
@@ -11674,9 +11674,9 @@ select * from cg_ref_codes where rv_domain like '%NECESS%'
 * Nome         : Procedure Atualiza_Cedidos_prc                                     *                   *
 * Analista     : Alexandre Dall'Alba                                                *
 * Desenvolvedor: Alexandre Dall'Alba                                                *
-* Data criação : 15/01/2018                                                         *
-* Objetivo     : Identificar os funcionários cedidos para outras casas              *
-* Observação   : A chamada está na Popula_bi_pck                                    *
+* Data criaï¿½ï¿½o : 15/01/2018                                                         *
+* Objetivo     : Identificar os funcionï¿½rios cedidos para outras casas              *
+* Observaï¿½ï¿½o   : A chamada estï¿½ na Popula_bi_pck                                    *
 *************************************************************************************/
   
   
@@ -11693,7 +11693,7 @@ Procedure Atualiza_Cedidos_prc(p_ano varchar2, p_mes varchar2) is
   v_prof_atual  number;
   v_prof_ant    number;
 /*--------------------------------------------------------
- Busca os cedidos para o período passado por parâmetro
+ Busca os cedidos para o perï¿½odo passado por parï¿½metro
 --------------------------------------------------------*/
 begin
   for i in (select ri.*,
@@ -11736,8 +11736,8 @@ begin
       
     end if;
 /*----------------------------------------------------------------------------
- Como podem existir cedências parciais, os diferentes códigos são armazenados na
-tabela como FK's para a dimensão dim_tipos_indicadores
+ Como podem existir cedï¿½ncias parciais, os diferentes cï¿½digos sï¿½o armazenados na
+tabela como FK's para a dimensï¿½o dim_tipos_indicadores
 ------------------------------------------------------------------------------*/
   
     v_prof_ant := v_prof_atual;
@@ -11770,7 +11770,7 @@ tabela como FK's para a dimensão dim_tipos_indicadores
     End case;
 
 /*----------------------------------------------------------------------------
-  Faz o update dos códigos para cada funcionário cedido encontrado dos campos FKs
+  Faz o update dos cï¿½digos para cada funcionï¿½rio cedido encontrado dos campos FKs
  e a Flag_Cedido da tabela Fat_Recursos_Humanos
 ------------------------------------------------------------------------------*/  
 
@@ -12007,7 +12007,7 @@ BEGIN
      Commit;
 END;
 5. chamar dentro de uma package passando os valores para as variaveis
-6. verificar se precisa criar as opções para usar com as variaveis ou nao
+6. verificar se precisa criar as opï¿½ï¿½es para usar com as variaveis ou nao
 
 
 --criacao de dims com scd no ODI
@@ -12040,7 +12040,7 @@ na camada fisica
 
 -- se a tabela nao tem PK nada impede de ter linhas repetidas mesmo com todos os campos iguais
 -- para consultas que retornam mais registros tem que verificar o campo que esta repetido e ligar no join
--- para consultas que retornam menos linhas existe alguma restrição de inner join ou falta left ou right join
+-- para consultas que retornam menos linhas existe alguma restriï¿½ï¿½o de inner join ou falta left ou right join
 
 
 -- estrutura curso -> matricula
@@ -12442,7 +12442,7 @@ and duo.codigo in (23032001001500,00000023032004001500)
 and dt_id in (201802,201803,201804)
 group by duo.descricao_3,duo.descricao, duo.codigo 
 
--- possivel caminho para garantir o que é sede e polo pela UO
+-- possivel caminho para garantir o que ï¿½ sede e polo pela UO
 -- problema, no sge posso ter mais de uma sede para o mesmo cnpj e aqui tb posso ter dois nomes vinculados ao mesmo cnpj
 -- nao tenho vinculo forte entr
 select dda_bi.bi_util_pck.bi_consultauouo(cc.codigo,cc.emp_emp_id) uo , cc.*
@@ -12461,7 +12461,7 @@ and dt_id in (201802,201803,201804)
 group by duo.descricao, duo.codigo -- falta colocar filial
 
 
--- polo e sede já funcionando no BI
+-- polo e sede jï¿½ funcionando no BI
 
 select fil.descricao, nvl(polo.descricao, uo.descricao), polo.descricao, fat.polo_sede, fat.flag_mobilidade, fat.polo_mobilidade, tur.sigla_turma, sum(realizado_matricula) 
 from  fat_educacao fat, dim_filiais_sge fil, dim_unidades_org uo, dim_unidades_org polo, dim_turmas tur
@@ -12543,7 +12543,7 @@ and osa.codpessoa = resp.codigo
 and resp.CODIGO = 13668
 
 
-        -- (1-Presencial, 2-Móvel, 3-A distância) --UTILIZAR A FLAG "EAD" da tela de curso      --(Select  Decode(Curs.Ead, 'N', '1', 'S', '2')-- || ' - ' || curs.codigo_sae
+        -- (1-Presencial, 2-Mï¿½vel, 3-A distï¿½ncia) --UTILIZAR A FLAG "EAD" da tela de curso      --(Select  Decode(Curs.Ead, 'N', '1', 'S', '2')-- || ' - ' || curs.codigo_sae
               From   Sis_Cursos         Curs
                     ,Sis_Cursos_Modulos Curm
               Where  Curm.Curs_Id = Curs.Id
@@ -13319,10 +13319,10 @@ AND ODS_STURNO.FLAG_ATUAL = 1
 --where codcoligada = 4 /*and to_char(DTMATRICULA,'mmyyyy') = '042018'*/ --ra = '00054036' 
        --  and descricao = 'Matriculado'
          
-    -- ate marcço 
+    -- ate marcï¿½o 
     --senai
     --28571  scop
-    -- 31236 -- diferenca é u numero de matriculas de abril
+    -- 31236 -- diferenca ï¿½ u numero de matriculas de abril
     
     --sesi
     -- bi 22878
@@ -13410,7 +13410,7 @@ select *
    and mat.codturma   = tur.codturma
    and mat.ra = '00042995'
    
--- para achar no bi pego o ra e vou na dimensão de alunos
+-- para achar no bi pego o ra e vou na dimensï¿½o de alunos
 
 -- encontrou o registro
 select * from dda_bidw.dim_alunos where ra = '00042995'
@@ -13426,9 +13426,9 @@ select * from dda_bidw.dim_situacao_aluno where id in (2248,2308)
 -- mesmo trazendo 2 registros, com otb tem dois na fato parece que a ligacao esta correta pela chave proposta
 
 -- me parece que a melhor estrategia vai ser mesmo criar novo mapeamento com update da fat_educacao
--- ligando as outras tabelas da ODS somente para linkar e buscar os codigos das dimensões
+-- ligando as outras tabelas da ODS somente para linkar e buscar os codigos das dimensï¿½es
 
--- validação do numero de registros aluno-hora
+-- validaï¿½ï¿½o do numero de registros aluno-hora
 
 -- FINAL . ATE O GROUP BY TEM QUE FICAR SEPARADO NO JOIN DA FATO EDUCACAO, DEPOIS LIGA O RESULTADO NO RESTO
 select * from (
@@ -13544,7 +13544,7 @@ GROUP BY
 
 
 
---- resultado final ODI já retirando dimensao de turma e situacao do aluno com resultado batendo 21841 registros
+--- resultado final ODI jï¿½ retirando dimensao de turma e situacao do aluno com resultado batendo 21841 registros
 
 select count(*) from (
 select 
@@ -13738,7 +13738,7 @@ select
   nvl(case          when nvl(INLINE_VIEW.EBEP,0) = '1' then  3          when nvl(INLINE_VIEW.GRATUIDADE,0)  = 1  then 1          else           2        end,0) AS DTPMA_ID,
   0 AS DTPCL_ID,
   '-' AS CR_LOT,
-  nvl(MAP_BUSCA_IND_PROD_A.IND,'Não') AS IND_PROD,
+  nvl(MAP_BUSCA_IND_PROD_A.IND,'Nï¿½o') AS IND_PROD,
   0 AS PREVISTO_HH,
   0 AS PREVISTO_ATENDIMENTO,
   0 AS REALIZADO_HH,
@@ -13753,8 +13753,8 @@ select
   0 AS REALIZADO_AT_ANO_MES_ANT,
   0 AS DST_ID,
   NVL(MAP_BUSCA_IND_ATEND_A.DGCS_ID,NVL(MAP_BUSCA_IND_DN_A.DGCS_ID,MAP_BUSCA_IND_PROD_A.DGCS_ID)) AS DCGS_ID,
-  NVL(MAP_BUSCA_IND_DN_A.IND,'Não') AS IND_DN,
-  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Não') AS IND_ATEND,
+  NVL(MAP_BUSCA_IND_DN_A.IND,'Nï¿½o') AS IND_DN,
+  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Nï¿½o') AS IND_ATEND,
   0 AS DPLA_ID,
  -- nvl(INLINE_VIEW.ID||INLINE_VIEW.ID_3||INLINE_VIEW.ID_6,'-') AS CHAVE,
   '-' AS CHAVE_BSC,
@@ -13770,7 +13770,7 @@ select
   0 AS SAIDA_TRANCADO,
   0 AS SAIDA_TRANSFERIDO,
   0 AS SAIDA_RESIDUAL,
-  nvl(DECODE(     case when INLINE_VIEW.CODCLIENTE = 0 then '9'          when INLINE_VIEW.CODCLIENTE between 423 and 452 then '4'          else INLINE_VIEW.CODCLIENTE     end, '9', 'Não Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO_1),0) AS TIPO_GRATUIDADE,
+  nvl(DECODE(     case when INLINE_VIEW.CODCLIENTE = 0 then '9'          when INLINE_VIEW.CODCLIENTE between 423 and 452 then '4'          else INLINE_VIEW.CODCLIENTE     end, '9', 'Nï¿½o Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO_1),0) AS TIPO_GRATUIDADE,
   0 AS DDISC_ID,
   0 AS DPRO_ID_INSTRUTOR,
   0 AS DCLIPF_ID,
@@ -13980,7 +13980,7 @@ where  (1=1)
 
 -- esse item considera todas as combinacoes possiveis para calcular o proximo item calculado. colocar mais os relacionados ao ano
 DECODE(SUM(Mes),1,1,2,1,3,1,4,1,5,1,6,1,10,2,20,2,30,2,40,2,50,2,60,2,61,3,63,3,64,3,65,3,66,3,11,3,12,3,13,3,14,3,15,3,16,3,21,3,22,3,23,3,24,3,25,3,26,3,31,3,32,3,33,3,34,3,35,3,36,3,41,3,42,3,43,3,44,3,45,3,46,3,51,3,52,3,53,3,54,3,55,3,56,3)
--- esse é o item calculado final que calcula os valores de acordo com o os meses ou range de meses escolhido
+-- esse ï¿½ o item calculado final que calcula os valores de acordo com o os meses ou range de meses escolhido
 DECODE(Item14,1,1,2,1,3,2)
 
 -- exemplo da coluna a ser criada
@@ -14191,7 +14191,7 @@ AND F.DCR_ID = RESP.ID
 --and f.dt_id between 201801 and 201803
 --AND T.NOME = '18202018004'
 AND T.SIGLA_TURMA = '08181N1ME3R'
-AND A.NOME = 'ANGÉLICA ÁVILA DUTRA'
+AND A.NOME = 'ANGï¿½LICA ï¿½VILA DUTRA'
 
 SELECT * FROM dim_turmas DT WHERE DT.COD_ORIGEM_SGE= '18202018004'
 SELECT * FROM DIM_ALUNOS DA WHERE DA.NOME = 'LUISA DIEFENBACH'
@@ -14679,7 +14679,7 @@ select * from rm.smatricpl sma
 where sma.codturma = 'ECO-ECMT-2018-000295'
 and   sma.ra = '00038702'
 
---- insert UO e CR última versão
+--- insert UO e CR ï¿½ltima versï¿½o
 
 insert into dda_bi.ODS_TMP_UO_CR 
 (                select * 
@@ -14892,10 +14892,10 @@ AND    HF.CODCOLIGADA = GFIL.CODCOLIGADA
 
 --- matriculas isoladas ODI
 
--- as matriculas isoladas nao possuem vinculo com a matricplcompl então as informações dependentes dela nao
--- subirao a nao ser que seja  criados os campos específicos na smatriculacompl
+-- as matriculas isoladas nao possuem vinculo com a matricplcompl entï¿½o as informaï¿½ï¿½es dependentes dela nao
+-- subirao a nao ser que seja  criados os campos especï¿½ficos na smatriculacompl
 -- execmplos tudo o que depende de ebep, tipograt e tipofinanc (ind_dn, etc, gratuidade regim, tipo gratuidade, etc)
--- essse select já isola o que depende da smatricplcompl e ajusta os joins da smatricpl para a smatricula
+-- essse select jï¿½ isola o que depende da smatricplcompl e ajusta os joins da smatricpl para a smatricula
 -- a ligacao com a dim_turnos pode ser feita via tipo de curso
 -- realizar esses ajustes na map_tabelas_sge_isoladas
 SELECT 
@@ -15132,7 +15132,7 @@ select *--count(*)
     and turm.idperlet = tdis.idperlet
     and turm.codcoligada = shfi.codcoligada
     and turm.codfilial = shfi.codfilial
-    and turm.codturma not like 'EP%'  -- retirar os encontros com professores pois não contam 
+    and turm.codturma not like 'EP%'  -- retirar os encontros com professores pois nï¿½o contam 
     and matr.codcoligada = sma.codcoligada(+)
     and matr.idperlet = sma.idperlet(+)
     and matr.idhabilitacaofilial = sma.idhabilitacaofilial(+)
@@ -15326,15 +15326,15 @@ AND MP.ra =  '00046238'
 and    MP.codcoligada = 2
 and    cur.codcurso IN ('NOVA EJA', 'EJA-PRO', 'EJA EM', 'EJA EF II')
 and   sst.descricao not in ('Inscrito',
-                             'Pré Inscrito',
-                             'Pré Matrícula',
-                             'Pré Matrícula Online',
-                             'Pré-Matricula',
-                             'Pré-Matriculado',
+                             'Prï¿½ Inscrito',
+                             'Prï¿½ Matrï¿½cula',
+                             'Prï¿½ Matrï¿½cula Online',
+                             'Prï¿½-Matricula',
+                             'Prï¿½-Matriculado',
                              'Cancelado',
                              'Reclassificado',
-                             'Transferência Interna',
-                             'Transferência de Turma' )  
+                             'Transferï¿½ncia Interna',
+                             'Transferï¿½ncia de Turma' )  
 --group by sma.ra, sst.codstatus
 order by MP.ra
 
@@ -15401,7 +15401,7 @@ and fat.flag_mobilidade = 'S'--and cod_origem_sge like 'ECO%'
 
 
 
---verifica o mesmo RA na ODS para ver se está igual ao RM
+--verifica o mesmo RA na ODS para ver se estï¿½ igual ao RM
 select  TU.CODTURMA, SST.DESCRICAO, MP.RECMODIFIEDON FROM   dda_bi.ods_SMATRICPL MP LEFT   JOIN  dda_bi.ods_SHABILITACAOALUNO HA
 ON     HA.CODCOLIGADA = MP.CODCOLIGADA
 AND    HA.IDHABILITACAOFILIAL = MP.IDHABILITACAOFILIAL
@@ -15572,15 +15572,15 @@ where  MP.ra =  '00000323'
 and    MP.codcoligada = 2
 and    cur.codcurso IN ('NOVA EJA', 'EJA-PRO', 'EJA EM', 'EJA EF II')
 and   sst.descricao not in ('Inscrito',
-                             'Pré Inscrito',
-                             'Pré Matrícula',
-                             'Pré Matrícula Online',
-                             'Pré-Matricula',
-                             'Pré-Matriculado',
+                             'Prï¿½ Inscrito',
+                             'Prï¿½ Matrï¿½cula',
+                             'Prï¿½ Matrï¿½cula Online',
+                             'Prï¿½-Matricula',
+                             'Prï¿½-Matriculado',
                              'Cancelado',
                              'Reclassificado',
-                             'Transferência Interna',
-                             'Transferência de Turma' )  
+                             'Transferï¿½ncia Interna',
+                             'Transferï¿½ncia de Turma' )  
 --group by sma.ra, sst.codstatus
 order by MP.ra
 
@@ -15596,7 +15596,7 @@ where t.dt_modificacao  = (select max(dt_modificacao) from dda_bidw.tmp_update_e
 and ra = '00046238'
 
 
--- testa o RA para ver se há necessidade de mudar o processo de carga da TMP
+-- testa o RA para ver se hï¿½ necessidade de mudar o processo de carga da TMP
 select ra, max(codstatus),semestre/*,max(recmodifiedon)*/,max(recturma)--, sum(total) 
 from (
 --SELECT CODSTATUS, RA, SEMESTRE, RECMODIFIEDON, recturma,/*, MAX(RECturma)*//*MAX(*/CODTURMA/*)*/--, count(1)total 
@@ -15653,17 +15653,17 @@ select length(cnpjempresa),
        cnpjempresa, length(replace(translate(cnpjempresa,'./-','  '),' ','')),
        replace(translate(cnpjempresa,'./-','  '),' ',''), 
        replace(replace(replace(cnpjempresa,'.',''),'/',''),'-',''), 
-       nvl(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(cnpjempresa,'[A-Z a-z]|\/',''),'-',''),'[:punct:]',''),'[:space:]',''),'[:cntrl:]',''),'°',''),'º',''),',',''),'''',''),0)REG , 
+       nvl(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(cnpjempresa,'[A-Z a-z]|\/',''),'-',''),'[:punct:]',''),'[:space:]',''),'[:cntrl:]',''),'ï¿½',''),'ï¿½',''),',',''),'''',''),0)REG , 
        length(cnpjempresa),
        Replace(Replace(translate(upper(cnpjempresa),
-                                               'ÁÇÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃÕËÜ',
+                                               'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
                                                'ACEIOUAEIOUAEIOUAOEU'),
                                      '-',
                                      ''),
                              '''',
                              ''),
        length( Replace(Replace(translate(upper(cnpjempresa),
-                                               'ÁÇÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃÕËÜ',
+                                               'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
                                                'ACEIOUAEIOUAEIOUAOEU'),
                                      '-',
                                      ''),
@@ -15704,7 +15704,7 @@ CREATE (Sapiranga_CAT:Filial {filial:'Sapiranga'})
 select 'CREATE ('||NOME||':Cidade {cidade: '|| NOME/*'Canoas'*/||', estado: '||UF_SIGLA||'})' from dda_bidw.dim_municipios 
 CREATE (Tapejara:Cidade {cidade:'Tapejara'})
 CREATE (Panambi:Cidade {cidade:'Panambi'})
-CREATE (NaoMeToque:Cidade {cidade:'Não Me Toque'})
+CREATE (NaoMeToque:Cidade {cidade:'Nï¿½o Me Toque'})
 CREATE (Garibaldi:Cidade {cidade:'Garibaldi'})
 CREATE (Bento:Cidade {cidade:'Bento Goncalves'})
 CREATE (MonteBelo:Cidade {cidade:'Monte Belo'})
@@ -15774,7 +15774,7 @@ CREATE
   
 -- para retornar simplesmente um registro
 
-MATCH (EJA_ENSINO_MÉDIO_EDUCAÇÃO_A_DISTÂNCIA {ead: "S"}) RETURN EJA_ENSINO_MÉDIO_EDUCAÇÃO_A_DISTÂNCIA
+MATCH (EJA_ENSINO_Mï¿½DIO_EDUCAï¿½ï¿½O_A_DISTï¿½NCIA {ead: "S"}) RETURN EJA_ENSINO_Mï¿½DIO_EDUCAï¿½ï¿½O_A_DISTï¿½NCIA
 
 -- alias para buscar todas as colunas no join
 
@@ -18276,7 +18276,7 @@ else 0
 end AS DTPMA_ID,
   0 AS DTPCL_ID,
   '-' AS CR_LOT,
-  nvl(MAP_BUSCA_IND_PROD_A.IND,'Não') AS IND_PROD,
+  nvl(MAP_BUSCA_IND_PROD_A.IND,'Nï¿½o') AS IND_PROD,
   0 AS PREVISTO_HH,
   0 AS PREVISTO_ATENDIMENTO,
   0 AS REALIZADO_HH,
@@ -18291,8 +18291,8 @@ end AS DTPMA_ID,
   0 AS REALIZADO_AT_ANO_MES_ANT,
   0 AS DST_ID,
   NVL(NVL(MAP_BUSCA_IND_ATEND_A.DGCS_ID,NVL(MAP_BUSCA_IND_DN_A.DGCS_ID,MAP_BUSCA_IND_PROD_A.DGCS_ID)),0) AS DCGS_ID,
-  NVL(MAP_BUSCA_IND_DN_A.IND,'Não') AS IND_DN,
-  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Não') AS IND_ATEND,
+  NVL(MAP_BUSCA_IND_DN_A.IND,'Nï¿½o') AS IND_DN,
+  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Nï¿½o') AS IND_ATEND,
   0 AS DPLA_ID,
   nvl(DIM_ALUNOS.ID||DIM_TURMAS.ID||DIM_TEMPO.ID,'-') AS CHAVE,
   '-' AS CHAVE_BSC,
@@ -18312,7 +18312,7 @@ end AS DTPMA_ID,
     case when INLINE_VIEW.CODCLIENTE_1 = 0 then '9'
          when INLINE_VIEW.CODCLIENTE_1 between 423 and 452 then '4'
          else INLINE_VIEW.CODCLIENTE_1
-    end, '9', 'Não Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO),0) AS TIPO_GRATUIDADE,
+    end, '9', 'Nï¿½o Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO),0) AS TIPO_GRATUIDADE,
   0 AS DDISC_ID,
   0 AS DPRO_ID_INSTRUTOR,
   0 AS DCLIPF_ID,
@@ -18879,7 +18879,7 @@ else 0
 end AS DTPMA_ID,
   0 AS DTPCL_ID,
   '-' AS CR_LOT,
-  nvl(MAP_BUSCA_IND_PROD_A.IND,'Não') AS IND_PROD,
+  nvl(MAP_BUSCA_IND_PROD_A.IND,'Nï¿½o') AS IND_PROD,
   0 AS PREVISTO_HH,
   0 AS PREVISTO_ATENDIMENTO,
   0 AS REALIZADO_HH,
@@ -18894,8 +18894,8 @@ end AS DTPMA_ID,
   0 AS REALIZADO_AT_ANO_MES_ANT,
   0 AS DST_ID,
   NVL(NVL(MAP_BUSCA_IND_ATEND_A.DGCS_ID,NVL(MAP_BUSCA_IND_DN_A.DGCS_ID,MAP_BUSCA_IND_PROD_A.DGCS_ID)),0) AS DCGS_ID,
-  NVL(MAP_BUSCA_IND_DN_A.IND,'Não') AS IND_DN,
-  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Não') AS IND_ATEND,
+  NVL(MAP_BUSCA_IND_DN_A.IND,'Nï¿½o') AS IND_DN,
+  NVL(MAP_BUSCA_IND_ATEND_A.IND,'Nï¿½o') AS IND_ATEND,
   0 AS DPLA_ID,
   nvl(DIM_ALUNOS.ID||DIM_TURMAS.ID||DIM_TEMPO.ID,'-') AS CHAVE,
   '-' AS CHAVE_BSC,
@@ -18915,7 +18915,7 @@ end AS DTPMA_ID,
     case when INLINE_VIEW.CODCLIENTE_1 = 0 then '9'
          when INLINE_VIEW.CODCLIENTE_1 between 423 and 452 then '4'
          else INLINE_VIEW.CODCLIENTE_1
-    end, '9', 'Não Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO),0) AS TIPO_GRATUIDADE,
+    end, '9', 'Nï¿½o Gratuita',4,'PRONATEC',INLINE_VIEW.DESCRICAO),0) AS TIPO_GRATUIDADE,
   0 AS DDISC_ID,
   0 AS DPRO_ID_INSTRUTOR,
   0 AS DCLIPF_ID,
@@ -19200,7 +19200,7 @@ partition by range (DT_ID)
       minextents 1
       maxextents unlimited
     ),
-  --- outras partições
+  --- outras partiï¿½ï¿½es
 );
 -- Add comments to the columns 
 comment on column DDA_BIDW.FAT_EDUCACAO.dalu_id
@@ -19507,7 +19507,7 @@ where gcoligada.codcoligada = 2
 -------------------------------------------------------------------
 
 
---------- alteração UO na odi_tmp_uo_cr para Mantovani ------------
+--------- alteraï¿½ï¿½o UO na odi_tmp_uo_cr para Mantovani ------------
 
 insert into dda_bi.ODS_TMP_UO_CR select 
                                      distinct nvl(t2.cr, t1.cr) cr, 
@@ -19570,7 +19570,7 @@ insert into dda_bi.ODS_TMP_UO_CR select
                                  and t1.habilitacao = t2.habilitacao_turma(+)
 
 -------------------------------------------------------------------
--- validação dos dados
+-- validaï¿½ï¿½o dos dados
 
 -- tabela nova carregada
 select * from dda_bidw.fat_educacao fat, dda_bidw.dim_unidades_org uo, dda_bidw.dim_turmas tur, dda_bidw.dim_centros_resp cr
@@ -19657,11 +19657,11 @@ v_banco   varchar2(30) := '@BISTG';
     * Nome         : fat_dre_bpd_prc
     * Analista     : Luciano Machado
     * Desenvolvedor: Fernando Frizzo - Meta
-    * Data criação : 30/06/2009
-    * Objetivo     : Procedimento para geração das informações unificadas do boletim e dre.
+    * Data criaï¿½ï¿½o : 30/06/2009
+    * Objetivo     : Procedimento para geraï¿½ï¿½o das informaï¿½ï¿½es unificadas do boletim e dre.
     ****************************************************
-    * Usuário alteração:           Data Alteração:
-    * Motivo alteração:
+    * Usuï¿½rio alteraï¿½ï¿½o:           Data Alteraï¿½ï¿½o:
+    * Motivo alteraï¿½ï¿½o:
     ***************************************************\
     Cursor cur_fat_dre( v_ano In Number
                       , v_mes In Number ) Is
@@ -19735,7 +19735,7 @@ v_banco   varchar2(30) := '@BISTG';
              , 0                         rea_mes_ano_ant_debito
              , 1                  natureza
              , bpd.dipr_id        dict_id
-             , 'Produção Física'  origem
+             , 'Produï¿½ï¿½o Fï¿½sica'  origem
              , bpd.cr_lot         cr_lot
              , bpd.ind_prod       Ind_prod
              , bpd.dcgs_id        dcgs_Id
@@ -19813,11 +19813,11 @@ v_banco   varchar2(30) := '@BISTG';
      * Nome         : FAT_DRE_EDUC_SENAI_PRC
      * Analista     : Carine dos Reis
      * Desenvolvedor: Carine dos Reis
-     * Data criação : 30/11/2011
-     * Objetivo     : Procedimento para geração das informações unificadas da educação e dre.
+     * Data criaï¿½ï¿½o : 30/11/2011
+     * Objetivo     : Procedimento para geraï¿½ï¿½o das informaï¿½ï¿½es unificadas da educaï¿½ï¿½o e dre.
      ****************************************************
-     * Usuário alteração:           Data Alteração:
-     * Motivo alteração:
+     * Usuï¿½rio alteraï¿½ï¿½o:           Data Alteraï¿½ï¿½o:
+     * Motivo alteraï¿½ï¿½o:
      ***************************************************\
     --
     v_Data_Inicio  Varchar2(4); --sis_aux_consolidado_scop.ano%Type;
@@ -19933,7 +19933,7 @@ v_banco   varchar2(30) := '@BISTG';
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20026,7 +20026,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20120,7 +20120,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20213,7 +20213,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20305,7 +20305,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20397,7 +20397,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20489,7 +20489,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20584,7 +20584,7 @@ Union All
              , educ.dturm_id                           dturm_id
              , educ.dt_id                              dt_id
              , educ.duorg_id                           duorg_id
-             , 'PRODUÇÃO FISÍCA'                       origem
+             , 'PRODUï¿½ï¿½O FISï¿½CA'                       origem
              -- ,'C'                                     natureza
              , 1                                       natureza
              , educ.data_sistema                       data_sistema
@@ -20736,11 +20736,11 @@ Union All
       * Nome         : FAT_DRE_EDUC_SESI_PRC
       * Analista     : Tarso Ferraz da Silva
       * Desenvolvedor: Tarso Ferraz da Silva
-      * Data criação : 15/02/2012
-      * Objetivo     : Procedimento para geração das informações unificadas da educação SESI e dre.
+      * Data criaï¿½ï¿½o : 15/02/2012
+      * Objetivo     : Procedimento para geraï¿½ï¿½o das informaï¿½ï¿½es unificadas da educaï¿½ï¿½o SESI e dre.
       ****************************************************
-      * Usuário alteração: tarso.silva         Data Alteração: 14/09/2012
-      * Motivo alteração:  CAP: 10537          Num.: 001
+      * Usuï¿½rio alteraï¿½ï¿½o: tarso.silva         Data Alteraï¿½ï¿½o: 14/09/2012
+      * Motivo alteraï¿½ï¿½o:  CAP: 10537          Num.: 001
       ***************************************************\
     Cursor Cur_Fat_Dre ( v_Ano In Number
                        , v_Mes In Number ) Is
@@ -20774,7 +20774,7 @@ Union All
 --              ,dre_bpd.rea_credito                  realizado
            , case
                when dre_bpd.dipr_id = dtpma.pla_idp_id
-                 and dre_bpd.origem = 'Produção Física'
+                 and dre_bpd.origem = 'Produï¿½ï¿½o Fï¿½sica'
                  then 0
                else dre_bpd.rea_credito
              End as realizado
@@ -20783,7 +20783,7 @@ Union All
 --              ,dre_bpd.rea_credito                  rea_credito
            , Case
                When dre_bpd.dipr_id = dtpma.pla_idp_id
-                 And dre_bpd.origem = 'Produção Física'
+                 And dre_bpd.origem = 'Produï¿½ï¿½o Fï¿½sica'
                  Then 0
                Else
                  dre_bpd.rea_credito
@@ -20791,7 +20791,7 @@ Union All
 --              ,dre_bpd.rea_debito                   rea_debito
            , Case
                When dre_bpd.dipr_id = dtpma.pla_idp_id
-                 And dre_bpd.origem = 'Produção Física'
+                 And dre_bpd.origem = 'Produï¿½ï¿½o Fï¿½sica'
                  Then 0
                Else
                  dre_bpd.rea_debito
@@ -21029,11 +21029,11 @@ Union All
      * Nome         : fat_vendas_bpd
      * Analista     : Luciano Machado
      * Desenvolvedor: Fernando Frizzo - Meta
-     * Data criação : 03/07/2009
-     * Objetivo     : Procedimento para unificação das informações de vendas de boletim de produção
+     * Data criaï¿½ï¿½o : 03/07/2009
+     * Objetivo     : Procedimento para unificaï¿½ï¿½o das informaï¿½ï¿½es de vendas de boletim de produï¿½ï¿½o
      ****************************************************
-     * Usuário alteração: Luciano Machado           Data Alteração: 05/02/2010
-     * Motivo alteração: Solicitação Força de Vendas
+     * Usuï¿½rio alteraï¿½ï¿½o: Luciano Machado           Data Alteraï¿½ï¿½o: 05/02/2010
+     * Motivo alteraï¿½ï¿½o: Solicitaï¿½ï¿½o Forï¿½a de Vendas
      ***************************************************\
     Cursor cur_fat_vendas( v_ano In Number
                          , v_mes In Number ) Is
@@ -21077,7 +21077,7 @@ Union All
            , dim_documento ddoc
        Where fat.dt_id = dt.id
          And fat.ddoc_id = ddoc.id
-         --and 1 = 2 -- Luciano Machado ** Devido a publicação do ERP
+         --and 1 = 2 -- Luciano Machado ** Devido a publicaï¿½ï¿½o do ERP
          And dt.ano  = nvl(v_ano, dt.ano)
          And dt.mes >= nvl(v_mes, dt.mes)
        --  And fat.SALDO >= 0
@@ -21103,9 +21103,9 @@ Union All
            , 0      receita_mercado_final
            , 0      rec_merc_ano_ant
            , 0      rec_merc_mes_ant
-           , 'Boletim Produção'  doc_ref
+           , 'Boletim Produï¿½ï¿½o'  doc_ref
            , Null   data_lancamento
-           , 'Boletim Produção'  descricao_hist
+           , 'Boletim Produï¿½ï¿½o'  descricao_hist
            , 0      compulsorio_ano_mes_ant
            , 0      compulsorio_mes_ant
            , bpd.idc_ah       idc_ah
@@ -21115,9 +21115,9 @@ Union All
            , bpd.realizado_mes_ant     realizado_mes_ant
            , bpd.previsto_ano_mes_ant  previsto_mes_ano_ant
            , bpd.realizado_ano_mes_ant realizado_mes_ano_ant
-           , decode(bpd.origem,'SGE','SGE','GES','GES','Produção Física')    Origem
+           , decode(bpd.origem,'SGE','SGE','GES','GES','Produï¿½ï¿½o Fï¿½sica')    Origem
            , bpd.empresas_atendidas
-           , 'Boletim Produção'   tipo_documento
+           , 'Boletim Produï¿½ï¿½o'   tipo_documento
            , bpd.duorg_id || bpd.dcr_id || bpd.demp_id || bpd.dt_id  Chave
            , bpd.datv_id || bpd.dcli_id || bpd.dcr_id || 0 || bpd.demp_id
              || bpd.dipr_id || bpd.dipr_id || bpd.dpro_id || bpd.dt_id
@@ -21262,7 +21262,7 @@ Select 'CRE_DEB',descricao,cod_mascara_descricao_1,(Case
            
 -- CONFERENCIA FINAL POLO SEDE
 -- AMBIENTE DEV E PROD
--- PEGAR CASOS DE POLO E SEDE E COLOCAR NA PROXIMA CONSULTA QUE É A MAP_TABELAS_SGE
+-- PEGAR CASOS DE POLO E SEDE E COLOCAR NA PROXIMA CONSULTA QUE ï¿½ A MAP_TABELAS_SGE
 
 select /*fat.origem,*/ fat.duorg_id,/*fat.sede_id,*/ uo.codigo,uo.descricao, fat.flag_polo_sede,cur.flag_ead,fat.polo_id, fat.sede_id,/*fat.polo_id, polo.descricao,*/ sum(realizado_matricula_senai)
 from fat_educacao fat, dim_unidades_org uo,/* dim_unidades_org polo, */dim_contas con, dim_centros_resp cr, dim_cursos_modulos cur--, fat_dre_educ dre, 
@@ -23132,11 +23132,11 @@ Begin
 End;
 /
 
--- para a atualizacao do municipio do aluno na fat_educacao, para o projeto da evasão foi criada uma proc
+-- para a atualizacao do municipio do aluno na fat_educacao, para o projeto da evasï¿½o foi criada uma proc
 
 select encontrar_cod_municipio('Novo Hamburgo','RS',93542540) from dual;
 
--- essa proc é passada no novo mapeamento da dim_alunos. Tb foi criada outro map para ods_ppessoa_cep
+-- essa proc ï¿½ passada no novo mapeamento da dim_alunos. Tb foi criada outro map para ods_ppessoa_cep
 
 
 -- busca todas as tabelas do owner
@@ -23366,7 +23366,7 @@ SELECT *
           ,err.descricao_completa
           ,CASE err.tipo
             WHEN 'co' THEN 'Campos Requeridos'
-            WHEN 'rn' THEN 'Regra de Negócio'
+            WHEN 'rn' THEN 'Regra de Negï¿½cio'
            END AS tipo_erro
           ,col.posicao
       ,col.nome
@@ -23383,14 +23383,14 @@ PIVOT
 )
 )
 SELECT DADOS.ID, dados.exec_id
-      ,to_char(mex.data_execucao, 'dd/mm/yyyy hh24:mi:ss') AS "Data Execução"
+      ,to_char(mex.data_execucao, 'dd/mm/yyyy hh24:mi:ss') AS "Data Execuï¿½ï¿½o"
       ,erros.tipo_erro AS "Tipo Erro"
-      ,erros.agrupamento AS "Nível do Erro"
+      ,erros.agrupamento AS "Nï¿½vel do Erro"
       ,erros.consulta_id||' - '||erros.descricao AS "Origem Problema"
-      ,erros.descricao_completa AS "Dica p/ Correção"
+      ,erros.descricao_completa AS "Dica p/ Correï¿½ï¿½o"
       ,scur.codCurso||' - '||scur.nome AS "Curso"
       ,sgrad.codGrade||' - '||sgrad.descricao AS "Grade"
-      ,stur.codturma AS "Código da Turma"
+      ,stur.codturma AS "Cï¿½digo da Turma"
       ,stur.nome AS "Nome da Turma"
       ,dados.codFilial$ AS "CodFilial"
       ,gfil.nomefantasia AS "Nome Filial"
@@ -23498,7 +23498,7 @@ select ra, codturma, dtinicial, dtfinal, descricao,
                                       end )  data_granularidade_DIM_TEMPO ,
 
 to_char(/*to_date(*/reccreatedon/*&dt_criacao*//*,'dd/mm/yyyy')*/,'YYYYMM')
-                                        DIM_ADICIONAL_Mês_Criacao ,
+                                        DIM_ADICIONAL_Mï¿½s_Criacao ,
                
 (case when to_char(/*to_date(*/reccreatedon/*&dt_criacao*//*,'dd/mm/yyyy')*/,'YYYYMM') > (case when to_char(/*to_date(*/dtmatricula/*&dt_matricula*//*,'dd/mm/yyyy')*/,'YYYYMM') >= to_char(/*to_date(*/dtinicial/*&dt_inicio*//*,'dd/mm/yyyy')*/,'YYYYMM')
                                            then to_char(/*to_date(*/dtmatricula/*&dt_matricula*//*,'dd/mm/yyyy')*/,'YYYYMM')
@@ -23559,7 +23559,7 @@ SELECT *
           ,err.descricao_completa
           ,CASE err.tipo
             WHEN 'co' THEN 'Campos Requeridos'
-            WHEN 'rn' THEN 'Regra de Negócio'
+            WHEN 'rn' THEN 'Regra de Negï¿½cio'
            END AS tipo_erro
           ,col.posicao
       ,col.nome
@@ -23581,13 +23581,13 @@ PIVOT
 
 
 --Tipo XML
---No exemplo anterior, foi necessário especificar os códigos de estado válidos para state_code:
+--No exemplo anterior, foi necessï¿½rio especificar os cï¿½digos de estado vï¿½lidos para state_code:
 
 for state_code in ('NY','CT','NJ','FL','MO')
 
---Para isso, os valores presentes na coluna state_code devem ser conhecidos com antecedência. Se os valores disponíveis não são conhecidos, como a consulta é criada?
+--Para isso, os valores presentes na coluna state_code devem ser conhecidos com antecedï¿½ncia. Se os valores disponï¿½veis nï¿½o sï¿½o conhecidos, como a consulta ï¿½ criada?
 
---Há outra cláusula na operação pivot, XML, que permite gerar a saída reordenada como código XML no qual é possível incluir uma cláusula especial, ANY, em lugar de valores literais. Segue um exemplo:
+--Hï¿½ outra clï¿½usula na operaï¿½ï¿½o pivot, XML, que permite gerar a saï¿½da reordenada como cï¿½digo XML no qual ï¿½ possï¿½vel incluir uma clï¿½usula especial, ANY, em lugar de valores literais. Segue um exemplo:
 
 select * from (
    select times_purchased as "Purchase Frequency", state_code
@@ -23604,11 +23604,11 @@ for state_code in (any)
 order by 1
 /
 
-/*A saída é apresentada em formato CLOB (objeto grande de caracteres), portanto, antes de executar a consulta, é conveniente conferir que tenha sido alocado um valor grande a LONGSIZE.
+/*A saï¿½da ï¿½ apresentada em formato CLOB (objeto grande de caracteres), portanto, antes de executar a consulta, ï¿½ conveniente conferir que tenha sido alocado um valor grande a LONGSIZE.
 
 SQL> set long 99999
 
-Há duas diferenças claras (marcadas em negrito) entre esta consulta e a operação pivot original. Primeiramente, foi especificada uma cláusula, pivot xml, em lugar de usar somente o operador pivot. Assim, a saída tem formato XML. Segundo, a cláusula FOR inclui for state_code in (any) em lugar de uma extensa lista de valores possíveis para state_code. A notação em XML permite usar a palavra-chave ANY, para assim evitar a necessidade de digitar os valores de state_code. Os dados de saída são apresentados assim:
+Hï¿½ duas diferenï¿½as claras (marcadas em negrito) entre esta consulta e a operaï¿½ï¿½o pivot original. Primeiramente, foi especificada uma clï¿½usula, pivot xml, em lugar de usar somente o operador pivot. Assim, a saï¿½da tem formato XML. Segundo, a clï¿½usula FOR inclui for state_code in (any) em lugar de uma extensa lista de valores possï¿½veis para state_code. A notaï¿½ï¿½o em XML permite usar a palavra-chave ANY, para assim evitar a necessidade de digitar os valores de state_code. Os dados de saï¿½da sï¿½o apresentados assim:
 
 Purchase Frequency STATE_CODE_XML
          ------------------ --------------------------------------------------
@@ -23632,7 +23632,7 @@ Purchase Frequency STATE_CODE_XML
 SELECT * FROM TABELA
 )unpivot(CONTEUDO_CAMPO FOR NOMES_CAMPO IN (acomp_30 AS '30',acomp_60 AS '60', acomp_90 as '90', acomp_120 AS '120', acomp_150 AS '150', acomp_180 as '180'))
 
-ex. (chapa, dataadmissao, acomp_30, acomp_60, etc (sao os campos data da tabela) entao conteudo_campo pode ser o nome para o conteudo dessas colunas, ex. datas_xx e dentro do in são os valores que serao representados para cada coluna no formato de linha
+ex. (chapa, dataadmissao, acomp_30, acomp_60, etc (sao os campos data da tabela) entao conteudo_campo pode ser o nome para o conteudo dessas colunas, ex. datas_xx e dentro do in sï¿½o os valores que serao representados para cada coluna no formato de linha
 
 
 -- resolver problema de group by
@@ -23649,7 +23649,7 @@ select * from inf_trustedzone.fat_carteira_credito where (contrato, mob) in (sel
 - entendimento dos dados, select nas tabelas, entendimento dos campos e relacionamentos
   - montar um ER na mao das principais tabelas e seus relacionamentos e cardinalidades
   - alterar o notebook EDA 1.1 e usar para as tabelas (incluir group by para pegar se tem linhas repetidas. ex. dados diferente em datas (data sem hora) iguais por exemplo, que pode furar um join)
-- simular via SQL ou spark a simulação em excel
+- simular via SQL ou spark a simulaï¿½ï¿½o em excel
 
 --lock e kill synapse
 
@@ -23672,10 +23672,10 @@ SELECT DISTINCT CASE WHEN PFUNC.CODNIVELSAL IN '802' THEN 'Conselheiro'
 ELSE (SELECT PTPFUNC.DESCRICAO from RM.PTPFUNC WHERE PTPFUNC.CODCLIENTE = PFUNC.CODTIPO) END  TIPOCOLABORADOR
 FROM RM.PFUNC;
 
--- ao criar a dimensao, alem dos campos descritivos, a chave natural tb deve ser levada para poder fazer o join com a tabela que supostamente será a fato
--- ao criar a fato, deve-se fazer os joins com todas as tabelas e campos necessários para ligar as dimensoes
+-- ao criar a dimensao, alem dos campos descritivos, a chave natural tb deve ser levada para poder fazer o join com a tabela que supostamente serï¿½ a fato
+-- ao criar a fato, deve-se fazer os joins com todas as tabelas e campos necessï¿½rios para ligar as dimensoes
 -- ao criar a tabela fato, deve-se levar as fks para poder ligar com as dimensoes
--- ao levar a dimensao para a fato, é feito um join da chave natural da dimensao com a fk da fato, ao encontrar a linha, a chave surrogate da dimensao é levada para a fato
+-- ao levar a dimensao para a fato, ï¿½ feito um join da chave natural da dimensao com a fk da fato, ao encontrar a linha, a chave surrogate da dimensao ï¿½ levada para a fato
 
 -- problema do left join trazer mais linhas do que a tabela da esquerda
 
@@ -23698,7 +23698,7 @@ Resultados:
 3,null
 4,null
 
-primeira coisa quando aumenta o numero de linhas em um join é se o numero de linhas antes e depois do join esta igual
+primeira coisa quando aumenta o numero de linhas em um join ï¿½ se o numero de linhas antes e depois do join esta igual
 
 depois verificar se as colunas do join estao corretas
 
@@ -23709,3 +23709,14 @@ verificar tb se nao existe nenhum vlr nulo nas colunas do join que pode matar a 
 
 verificar tb se nao existe nenhum campo com tipos de dados diferentes que pode matar a relacao
 
+
+-- select em delta tables no adls gen2
+SELECT
+    codigo,tipocodigo, count(1)
+FROM
+    OPENROWSET(
+        BULK 'https://dlprdbigdatav2.dfs.core.windows.net/rodovias/trusted/dutra/kcor/usrkcor/tauxacidentes/',
+        FORMAT = 'DELTA'
+    ) AS [result]
+group by codigo, tipocodigo
+having count(1) > 1
